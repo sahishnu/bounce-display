@@ -30,19 +30,49 @@ export function randomNoiseFactor(): number {
   return BOUNCE_NOISE_MIN + Math.random() * (BOUNCE_NOISE_MAX - BOUNCE_NOISE_MIN);
 }
 
-/** ±noiseFactor speed jitter on the axis that just bounced; other axis unchanged. */
-export function applyWallBounceNoise(
+type WallHits = { x: boolean; y: boolean };
+
+/**
+ * One-shot variance when leaving a wall — breaks repeating lanes/corners.
+ * Between bounces velocity stays constant (straight path).
+ */
+export function applyBounceVariance(
   vx: number,
   vy: number,
-  axis: "x" | "y",
   noiseFactor: number,
+  hits: WallHits,
   reducedMotion: boolean
 ): { vx: number; vy: number } {
-  if (reducedMotion || noiseFactor <= 0) return { vx, vy };
+  if (reducedMotion || noiseFactor <= 0 || (!hits.x && !hits.y)) return { vx, vy };
 
-  const jitter = 1 + (Math.random() - 0.5) * 2 * noiseFactor;
-  if (axis === "x") return { vx: vx * jitter, vy };
-  return { vx, vy: vy * jitter };
+  let mag = Math.hypot(vx, vy);
+  if (mag <= 0) return { vx, vy };
+
+  mag *= 1 + (Math.random() - 0.5) * 2 * noiseFactor;
+
+  let angle = Math.atan2(vy, vx);
+  let angleDelta = (Math.random() - 0.5) * 2 * noiseFactor * Math.PI * 0.35;
+  if (hits.x && hits.y) {
+    angleDelta += (Math.random() - 0.5) * 2 * noiseFactor * Math.PI * 0.25;
+  }
+
+  const absVx = Math.abs(vx);
+  const absVy = Math.abs(vy);
+  const axisSlack = mag * noiseFactor * 2;
+  const nearlyHorizontal =
+    absVy <= axisSlack || absVy / Math.max(absVx, 1e-6) < 0.06;
+  const nearlyVertical =
+    absVx <= axisSlack || absVx / Math.max(absVy, 1e-6) < 0.06;
+  if (nearlyHorizontal || nearlyVertical) {
+    angleDelta += (Math.random() < 0.5 ? -1 : 1) * noiseFactor * 1.2;
+  }
+
+  angle += angleDelta;
+
+  return {
+    vx: Math.cos(angle) * mag,
+    vy: Math.sin(angle) * mag,
+  };
 }
 
 export type BounceStepOptions = {
@@ -75,10 +105,13 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   x += vx * dt;
   y += vy * dt;
 
+  let hitX = false;
+  let hitY = false;
+
   if (x <= 0) {
     x = 0;
     vx = Math.abs(vx);
-    ({ vx, vy } = applyWallBounceNoise(vx, vy, "x", noiseFactor, reducedMotion));
+    hitX = true;
     if (!reducedMotion) {
       scaleX = 1 + SQUASH_AMOUNT;
       scaleY = 1 - SQUASH_AMOUNT * 0.5;
@@ -87,7 +120,7 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   } else if (x + w >= boxW) {
     x = boxW - w;
     vx = -Math.abs(vx);
-    ({ vx, vy } = applyWallBounceNoise(vx, vy, "x", noiseFactor, reducedMotion));
+    hitX = true;
     if (!reducedMotion) {
       scaleX = 1 + SQUASH_AMOUNT;
       scaleY = 1 - SQUASH_AMOUNT * 0.5;
@@ -98,7 +131,7 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   if (y <= 0) {
     y = 0;
     vy = Math.abs(vy);
-    ({ vx, vy } = applyWallBounceNoise(vx, vy, "y", noiseFactor, reducedMotion));
+    hitY = true;
     if (!reducedMotion) {
       scaleY = 1 + SQUASH_AMOUNT;
       scaleX = 1 - SQUASH_AMOUNT * 0.5;
@@ -107,12 +140,16 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   } else if (y + h >= boxH) {
     y = boxH - h;
     vy = -Math.abs(vy);
-    ({ vx, vy } = applyWallBounceNoise(vx, vy, "y", noiseFactor, reducedMotion));
+    hitY = true;
     if (!reducedMotion) {
       scaleY = 1 + SQUASH_AMOUNT;
       scaleX = 1 - SQUASH_AMOUNT * 0.5;
       if (chromaticEnabled) chromaticPx = CHROMATIC_HIT_PX;
     }
+  }
+
+  if (hitX || hitY) {
+    ({ vx, vy } = applyBounceVariance(vx, vy, noiseFactor, { x: hitX, y: hitY }, reducedMotion));
   }
 
   if (!reducedMotion) {
