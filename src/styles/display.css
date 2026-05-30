@@ -24,6 +24,12 @@
   object-fit: contain;
   pointer-events: none;
   user-select: none;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+.bounce-logo--chromatic {
+  will-change: transform, filter;
 }
 
 .timer-display {

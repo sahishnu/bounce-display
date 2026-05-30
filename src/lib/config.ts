@@ -11,6 +11,8 @@ export type DisplayConfig = {
   imageScalePercent: number;
   /** 10–300; 100 = default bounce speed. */
   bounceSpeedPercent: number;
+  /** RGB split on wall hits plus subtle idle drift. */
+  chromaticAberration: boolean;
   borderWidth: number;
   borderColor: string;
   timerDurationSeconds: number;
@@ -30,6 +32,7 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   boxHeight: 360,
   imageScalePercent: 40,
   bounceSpeedPercent: 40,
+  chromaticAberration: false,
   borderWidth: 2,
   borderColor: "#ffffff",
   timerDurationSeconds: 300,
@@ -231,6 +234,9 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
     imageScalePercent: clampScale(partial.imageScalePercent ?? DEFAULT_CONFIG.imageScalePercent),
     bounceSpeedPercent: clampBounceSpeed(
       partial.bounceSpeedPercent ?? DEFAULT_CONFIG.bounceSpeedPercent
+    ),
+    chromaticAberration: Boolean(
+      partial.chromaticAberration ?? DEFAULT_CONFIG.chromaticAberration
     ),
     timerDurationSeconds: Math.max(
       1,

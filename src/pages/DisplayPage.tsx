@@ -1,8 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import {
   formatTime,
-  getBounceVelocity,
-  getLogoSize,
   getRemainingMs,
   loadConfig,
   loadState,
@@ -12,6 +10,7 @@ import {
 } from "../lib/config";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
+import { useBounceAnimation } from "../hooks/useBounceAnimation";
 import "../styles/display.css";
 
 export function DisplayPage() {
@@ -23,7 +22,8 @@ export function DisplayPage() {
 
   const stageRef = useRef<HTMLDivElement>(null);
   const logoRef = useRef<HTMLImageElement>(null);
-  const animRef = useRef<number>(0);
+
+  useBounceAnimation({ stageRef, logoRef, config });
 
   useEffect(() => {
     const tick = () => setTimerText(formatTime(getRemainingMs(state, config)));
@@ -31,85 +31,6 @@ export function DisplayPage() {
     const id = window.setInterval(tick, 200);
     return () => clearInterval(id);
   }, [state, config]);
-
-  useEffect(() => {
-    const stage = stageRef.current;
-    const logo = logoRef.current;
-    if (!stage || !logo) return;
-
-    cancelAnimationFrame(animRef.current);
-
-    let x = 20;
-    let y = 20;
-    const initial = getBounceVelocity(config.bounceSpeedPercent);
-    let vx = initial.vx;
-    let vy = initial.vy;
-    let w = 80;
-    let h = 80;
-
-    const loop = () => {
-      const boxW = stage.clientWidth;
-      const boxH = stage.clientHeight;
-      const live = loadConfig();
-      const scalePercent = live.imageScalePercent;
-      const speed = getBounceVelocity(live.bounceSpeedPercent);
-      vx = Math.sign(vx || 1) * speed.vx;
-      vy = Math.sign(vy || 1) * speed.vy;
-
-      if (logo.naturalWidth && logo.complete) {
-        const size = getLogoSize(
-          logo.naturalWidth,
-          logo.naturalHeight,
-          boxW,
-          boxH,
-          scalePercent
-        );
-        w = size.width;
-        h = size.height;
-      }
-
-      x += vx;
-      y += vy;
-
-      if (x <= 0) {
-        x = 0;
-        vx = Math.abs(vx);
-      } else if (x + w >= boxW) {
-        x = boxW - w;
-        vx = -Math.abs(vx);
-      }
-
-      if (y <= 0) {
-        y = 0;
-        vy = Math.abs(vy);
-      } else if (y + h >= boxH) {
-        y = boxH - h;
-        vy = -Math.abs(vy);
-      }
-
-      logo.style.width = `${w}px`;
-      logo.style.height = `${h}px`;
-      logo.style.transform = `translate(${x}px, ${y}px)`;
-
-      animRef.current = requestAnimationFrame(loop);
-    };
-
-    const start = () => {
-      cancelAnimationFrame(animRef.current);
-      animRef.current = requestAnimationFrame(loop);
-    };
-
-    logo.onload = start;
-    if (logo.complete) start();
-
-    return () => cancelAnimationFrame(animRef.current);
-  }, [
-    config.boxWidth,
-    config.boxHeight,
-    config.imageScalePercent,
-    config.bounceSpeedPercent,
-    config.imageDataUrl,
-  ]);
 
   const logoSrc = resolveLogoSrc(config);
 
@@ -126,7 +47,7 @@ export function DisplayPage() {
       >
         <img
           ref={logoRef}
-          className="bounce-logo"
+          className={`bounce-logo${config.chromaticAberration ? " bounce-logo--chromatic" : ""}`}
           src={logoSrc}
           alt=""
           key={logoSrc}

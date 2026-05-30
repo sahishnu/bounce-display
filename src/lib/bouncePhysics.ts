@@ -1,0 +1,125 @@
+/** Squash intensity on wall impact (scale deviation from 1). */
+const SQUASH_AMOUNT = 0.06;
+/** How quickly squash springs back toward 1 (higher = snappier). */
+const SCALE_RECOVERY = 0.24;
+/** Peak chromatic split in px on impact. */
+const CHROMATIC_HIT_PX = 11;
+/** Chromatic decay per normalized frame (~60fps). */
+const CHROMATIC_DECAY = 0.13;
+/** Idle chromatic wobble amplitude in px when effect is on. */
+const CHROMATIC_IDLE_PX = 3.2;
+
+export type BounceBody = {
+  x: number;
+  y: number;
+  vx: number;
+  vy: number;
+  w: number;
+  h: number;
+  scaleX: number;
+  scaleY: number;
+  chromaticPx: number;
+};
+
+export type BounceStepOptions = {
+  boxW: number;
+  boxH: number;
+  /** Elapsed time in 60fps frame units (1 ≈ 16.67ms). */
+  dt: number;
+  chromaticEnabled: boolean;
+  reducedMotion: boolean;
+  timeMs: number;
+};
+
+function lerpToward(current: number, target: number, factor: number, dt: number): number {
+  const t = 1 - Math.pow(1 - factor, dt);
+  return current + (target - current) * t;
+}
+
+function idleChromaticOffset(timeMs: number): number {
+  const t = timeMs * 0.001;
+  return (
+    Math.sin(t * 4.2) * CHROMATIC_IDLE_PX * 0.55 +
+    Math.sin(t * 6.8 + 1.1) * CHROMATIC_IDLE_PX * 0.45
+  );
+}
+
+export function stepBounce(body: BounceBody, options: BounceStepOptions): BounceBody {
+  const { boxW, boxH, dt, chromaticEnabled, reducedMotion, timeMs } = options;
+  let { x, y, vx, vy, w, h, scaleX, scaleY, chromaticPx } = body;
+
+  x += vx * dt;
+  y += vy * dt;
+
+  if (x <= 0) {
+    x = 0;
+    vx = Math.abs(vx);
+    if (!reducedMotion) {
+      scaleX = 1 + SQUASH_AMOUNT;
+      scaleY = 1 - SQUASH_AMOUNT * 0.5;
+      if (chromaticEnabled) chromaticPx = CHROMATIC_HIT_PX;
+    }
+  } else if (x + w >= boxW) {
+    x = boxW - w;
+    vx = -Math.abs(vx);
+    if (!reducedMotion) {
+      scaleX = 1 + SQUASH_AMOUNT;
+      scaleY = 1 - SQUASH_AMOUNT * 0.5;
+      if (chromaticEnabled) chromaticPx = CHROMATIC_HIT_PX;
+    }
+  }
+
+  if (y <= 0) {
+    y = 0;
+    vy = Math.abs(vy);
+    if (!reducedMotion) {
+      scaleY = 1 + SQUASH_AMOUNT;
+      scaleX = 1 - SQUASH_AMOUNT * 0.5;
+      if (chromaticEnabled) chromaticPx = CHROMATIC_HIT_PX;
+    }
+  } else if (y + h >= boxH) {
+    y = boxH - h;
+    vy = -Math.abs(vy);
+    if (!reducedMotion) {
+      scaleY = 1 + SQUASH_AMOUNT;
+      scaleX = 1 - SQUASH_AMOUNT * 0.5;
+      if (chromaticEnabled) chromaticPx = CHROMATIC_HIT_PX;
+    }
+  }
+
+  if (!reducedMotion) {
+    scaleX = lerpToward(scaleX, 1, SCALE_RECOVERY, dt);
+    scaleY = lerpToward(scaleY, 1, SCALE_RECOVERY, dt);
+  } else {
+    scaleX = 1;
+    scaleY = 1;
+  }
+
+  if (chromaticEnabled && !reducedMotion) {
+    chromaticPx = lerpToward(chromaticPx, 0, CHROMATIC_DECAY, dt);
+    const idle = Math.abs(idleChromaticOffset(timeMs));
+    chromaticPx = Math.max(chromaticPx, idle);
+  } else {
+    chromaticPx = 0;
+  }
+
+  return { x, y, vx, vy, w, h, scaleX, scaleY, chromaticPx };
+}
+
+export function bounceTransform(body: BounceBody): string {
+  const { x, y, scaleX, scaleY } = body;
+  if (scaleX === 1 && scaleY === 1) {
+    return `translate3d(${x}px, ${y}px, 0)`;
+  }
+  return `translate3d(${x}px, ${y}px, 0) scale(${scaleX}, ${scaleY})`;
+}
+
+export function chromaticFilter(px: number): string {
+  if (px <= 0.05) return "";
+  const r = px;
+  const b = -px;
+  return [
+    `drop-shadow(${r}px 0 0 rgba(255, 55, 95, 0.82))`,
+    `drop-shadow(${b}px 0 0 rgba(45, 210, 255, 0.82))`,
+  ].join(" ");
+}

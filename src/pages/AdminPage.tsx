@@ -264,6 +264,23 @@ export function AdminPage() {
               />
               <p className="field-hint">40% is the default. Higher = faster bounce.</p>
             </div>
+
+            <div className="field field-toggle">
+              <label className="toggle-label" htmlFor="chromaticAberration">
+                <input
+                  id="chromaticAberration"
+                  type="checkbox"
+                  checked={draft.chromaticAberration}
+                  onChange={(e) =>
+                    patchImmediate({ ...draft, chromaticAberration: e.target.checked })
+                  }
+                />
+                Chromatic aberration
+              </label>
+              <p className="field-hint">
+                RGB split on wall hits with a subtle color drift while the logo moves.
+              </p>
+            </div>
           </section>
 
           <section className="card">
