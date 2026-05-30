@@ -9,6 +9,8 @@ export type DisplayConfig = {
   boxWidth: number;
   boxHeight: number;
   imageScalePercent: number;
+  /** 10–300; 100 = default bounce speed. */
+  bounceSpeedPercent: number;
   borderWidth: number;
   borderColor: string;
   timerDurationSeconds: number;
@@ -27,6 +29,7 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   boxWidth: 640,
   boxHeight: 360,
   imageScalePercent: 40,
+  bounceSpeedPercent: 40,
   borderWidth: 2,
   borderColor: "#ffffff",
   timerDurationSeconds: 300,
@@ -194,8 +197,23 @@ export function getBrowserViewportSize(): { width: number; height: number } {
   };
 }
 
+/** Pixel velocity per frame at 100% speed (50% default ≈ 0.55 / 0.45). */
+export const BOUNCE_SPEED_BASE = { vx: 1.1, vy: 0.9 };
+
 export function clampScale(value: number): number {
   return Math.min(100, Math.max(5, Math.round(Number(value) || DEFAULT_CONFIG.imageScalePercent)));
+}
+
+export function clampBounceSpeed(value: number): number {
+  return Math.min(300, Math.max(10, Math.round(Number(value) || DEFAULT_CONFIG.bounceSpeedPercent)));
+}
+
+export function getBounceVelocity(speedPercent: number): { vx: number; vy: number } {
+  const factor = clampBounceSpeed(speedPercent) / 100;
+  return {
+    vx: BOUNCE_SPEED_BASE.vx * factor,
+    vy: BOUNCE_SPEED_BASE.vy * factor,
+  };
 }
 
 export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig {
@@ -211,6 +229,9 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
     borderWidth: Math.min(48, Math.max(0, Math.round(Number(partial.borderWidth) || 0))),
     borderColor: partial.borderColor ?? DEFAULT_CONFIG.borderColor,
     imageScalePercent: clampScale(partial.imageScalePercent ?? DEFAULT_CONFIG.imageScalePercent),
+    bounceSpeedPercent: clampBounceSpeed(
+      partial.bounceSpeedPercent ?? DEFAULT_CONFIG.bounceSpeedPercent
+    ),
     timerDurationSeconds: Math.max(
       1,
       Number(partial.timerDurationSeconds) || DEFAULT_CONFIG.timerDurationSeconds

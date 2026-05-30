@@ -4,6 +4,7 @@ import { AdminPreview } from "../components/AdminPreview";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
 import {
+  clampBounceSpeed,
   clampScale,
   durationToMinSec,
   formatTime,
@@ -233,6 +234,35 @@ export function AdminPage() {
               <p className="field-hint">
                 Same sizing as on the display — % of the bounce box width and height.
               </p>
+            </div>
+
+            <div className="field logo-size-field">
+              <label htmlFor="bounceSpeedNumber">Logo speed (%)</label>
+              <input
+                id="bounceSpeedNumber"
+                className="scale-number-full"
+                type="number"
+                min={10}
+                max={300}
+                step={5}
+                value={draft.bounceSpeedPercent}
+                onChange={(e) =>
+                  patch({ ...draft, bounceSpeedPercent: clampBounceSpeed(Number(e.target.value)) })
+                }
+              />
+              <input
+                id="bounceSpeed"
+                type="range"
+                min={10}
+                max={300}
+                step={5}
+                value={draft.bounceSpeedPercent}
+                onChange={(e) =>
+                  patch({ ...draft, bounceSpeedPercent: clampBounceSpeed(Number(e.target.value)) })
+                }
+                aria-label="Logo speed"
+              />
+              <p className="field-hint">40% is the default. Higher = faster bounce.</p>
             </div>
           </section>
 

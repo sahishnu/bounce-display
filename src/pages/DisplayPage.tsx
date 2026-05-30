@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import {
   formatTime,
+  getBounceVelocity,
   getLogoSize,
   getRemainingMs,
   loadConfig,
@@ -40,15 +41,20 @@ export function DisplayPage() {
 
     let x = 20;
     let y = 20;
-    let vx = 2.2;
-    let vy = 1.8;
+    const initial = getBounceVelocity(config.bounceSpeedPercent);
+    let vx = initial.vx;
+    let vy = initial.vy;
     let w = 80;
     let h = 80;
 
     const loop = () => {
       const boxW = stage.clientWidth;
       const boxH = stage.clientHeight;
-      const scalePercent = loadConfig().imageScalePercent;
+      const live = loadConfig();
+      const scalePercent = live.imageScalePercent;
+      const speed = getBounceVelocity(live.bounceSpeedPercent);
+      vx = Math.sign(vx || 1) * speed.vx;
+      vy = Math.sign(vy || 1) * speed.vy;
 
       if (logo.naturalWidth && logo.complete) {
         const size = getLogoSize(
@@ -97,7 +103,13 @@ export function DisplayPage() {
     if (logo.complete) start();
 
     return () => cancelAnimationFrame(animRef.current);
-  }, [config.boxWidth, config.boxHeight, config.imageScalePercent, config.imageDataUrl]);
+  }, [
+    config.boxWidth,
+    config.boxHeight,
+    config.imageScalePercent,
+    config.bounceSpeedPercent,
+    config.imageDataUrl,
+  ]);
 
   const logoSrc = resolveLogoSrc(config);
 
