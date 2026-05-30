@@ -9,6 +9,9 @@ const CHROMATIC_DECAY = 0.13;
 /** Idle chromatic wobble amplitude in px when effect is on. */
 const CHROMATIC_IDLE_PX = 3.2;
 
+export const BOUNCE_NOISE_MIN = 0.01;
+export const BOUNCE_NOISE_MAX = 0.05;
+
 export type BounceBody = {
   x: number;
   y: number;
@@ -19,7 +22,28 @@ export type BounceBody = {
   scaleX: number;
   scaleY: number;
   chromaticPx: number;
+  /** Per-logo noise margin (0.01–0.05). */
+  noiseFactor: number;
 };
+
+export function randomNoiseFactor(): number {
+  return BOUNCE_NOISE_MIN + Math.random() * (BOUNCE_NOISE_MAX - BOUNCE_NOISE_MIN);
+}
+
+/** ±noiseFactor speed jitter on the axis that just bounced; other axis unchanged. */
+export function applyWallBounceNoise(
+  vx: number,
+  vy: number,
+  axis: "x" | "y",
+  noiseFactor: number,
+  reducedMotion: boolean
+): { vx: number; vy: number } {
+  if (reducedMotion || noiseFactor <= 0) return { vx, vy };
+
+  const jitter = 1 + (Math.random() - 0.5) * 2 * noiseFactor;
+  if (axis === "x") return { vx: vx * jitter, vy };
+  return { vx, vy: vy * jitter };
+}
 
 export type BounceStepOptions = {
   boxW: number;
@@ -46,7 +70,7 @@ function idleChromaticOffset(timeMs: number): number {
 
 export function stepBounce(body: BounceBody, options: BounceStepOptions): BounceBody {
   const { boxW, boxH, dt, chromaticEnabled, reducedMotion, timeMs } = options;
-  let { x, y, vx, vy, w, h, scaleX, scaleY, chromaticPx } = body;
+  let { x, y, vx, vy, w, h, scaleX, scaleY, chromaticPx, noiseFactor } = body;
 
   x += vx * dt;
   y += vy * dt;
@@ -54,6 +78,7 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   if (x <= 0) {
     x = 0;
     vx = Math.abs(vx);
+    ({ vx, vy } = applyWallBounceNoise(vx, vy, "x", noiseFactor, reducedMotion));
     if (!reducedMotion) {
       scaleX = 1 + SQUASH_AMOUNT;
       scaleY = 1 - SQUASH_AMOUNT * 0.5;
@@ -62,6 +87,7 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   } else if (x + w >= boxW) {
     x = boxW - w;
     vx = -Math.abs(vx);
+    ({ vx, vy } = applyWallBounceNoise(vx, vy, "x", noiseFactor, reducedMotion));
     if (!reducedMotion) {
       scaleX = 1 + SQUASH_AMOUNT;
       scaleY = 1 - SQUASH_AMOUNT * 0.5;
@@ -72,6 +98,7 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   if (y <= 0) {
     y = 0;
     vy = Math.abs(vy);
+    ({ vx, vy } = applyWallBounceNoise(vx, vy, "y", noiseFactor, reducedMotion));
     if (!reducedMotion) {
       scaleY = 1 + SQUASH_AMOUNT;
       scaleX = 1 - SQUASH_AMOUNT * 0.5;
@@ -80,6 +107,7 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
   } else if (y + h >= boxH) {
     y = boxH - h;
     vy = -Math.abs(vy);
+    ({ vx, vy } = applyWallBounceNoise(vx, vy, "y", noiseFactor, reducedMotion));
     if (!reducedMotion) {
       scaleY = 1 + SQUASH_AMOUNT;
       scaleX = 1 - SQUASH_AMOUNT * 0.5;
@@ -103,7 +131,7 @@ export function stepBounce(body: BounceBody, options: BounceStepOptions): Bounce
     chromaticPx = 0;
   }
 
-  return { x, y, vx, vy, w, h, scaleX, scaleY, chromaticPx };
+  return { x, y, vx, vy, w, h, scaleX, scaleY, chromaticPx, noiseFactor };
 }
 
 export function bounceTransform(body: BounceBody): string {

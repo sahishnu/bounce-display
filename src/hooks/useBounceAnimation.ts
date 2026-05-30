@@ -2,6 +2,7 @@ import { useEffect, useRef, type RefObject } from "react";
 import {
   bounceTransform,
   chromaticFilter,
+  randomNoiseFactor,
   stepBounce,
   type BounceBody,
 } from "../lib/bouncePhysics";
@@ -33,6 +34,7 @@ function createBounceBody(index: number, speed: { vx: number; vy: number }): Bou
     scaleX: 1,
     scaleY: 1,
     chromaticPx: 0,
+    noiseFactor: randomNoiseFactor(),
   };
 }
 
