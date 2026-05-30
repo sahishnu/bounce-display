@@ -1,13 +1,15 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { AdminPreview } from "../components/AdminPreview";
+import { FlipClockTimer } from "../components/FlipClockTimer";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
 import {
   clampBounceSpeed,
+  clampLogoCount,
   clampScale,
+  LOGO_COUNT_MAX,
   durationToMinSec,
-  formatTime,
   getRemainingMs,
   minSecToDuration,
   getBrowserViewportSize,
@@ -97,7 +99,8 @@ export function AdminPage() {
     patchImmediate({ boxWidth: width, boxHeight: height });
   };
 
-  const timerLive = formatTime(getRemainingMs(state, storedConfig));
+  const timerRemainingMs = getRemainingMs(state, storedConfig);
+  const reserveHours = storedConfig.timerDurationSeconds >= 3600;
   const paused = state.timerPausedRemainingMs != null;
   const running = state.timerStartedAt != null && !paused;
 
@@ -152,9 +155,11 @@ export function AdminPage() {
 
         <section className="card playback-card">
           <h2>Timer</h2>
-          <p className="timer-live" aria-live="polite">
-            {timerLive}
-          </p>
+          <FlipClockTimer
+            ms={timerRemainingMs}
+            reserveHours={reserveHours}
+            className="timer-live"
+          />
           <p className="timer-status">
             {paused
               ? "Paused"
@@ -185,6 +190,43 @@ export function AdminPage() {
         <div className="controls-card">
           <section className="card">
             <h2>Logo</h2>
+            <div className="field">
+              <span className="field-label">Logo count</span>
+              <div className="stepper" role="group" aria-label="Logo count">
+                <button
+                  type="button"
+                  className="stepper-btn"
+                  aria-label="Remove logo"
+                  disabled={draft.logoCount <= 1}
+                  onClick={() =>
+                    patchImmediate({
+                      ...draft,
+                      logoCount: clampLogoCount(draft.logoCount - 1),
+                    })
+                  }
+                >
+                  −
+                </button>
+                <span className="stepper-value" aria-live="polite">
+                  {draft.logoCount}
+                </span>
+                <button
+                  type="button"
+                  className="stepper-btn"
+                  aria-label="Add logo"
+                  disabled={draft.logoCount >= LOGO_COUNT_MAX}
+                  onClick={() =>
+                    patchImmediate({
+                      ...draft,
+                      logoCount: clampLogoCount(draft.logoCount + 1),
+                    })
+                  }
+                >
+                  +
+                </button>
+              </div>
+              <p className="field-hint">Up to {LOGO_COUNT_MAX} logos bounce independently on the display.</p>
+            </div>
             <div className="field">
               <label htmlFor="imageFile">Upload image</label>
               <input

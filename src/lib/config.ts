@@ -13,6 +13,8 @@ export type DisplayConfig = {
   bounceSpeedPercent: number;
   /** RGB split on wall hits plus subtle idle drift. */
   chromaticAberration: boolean;
+  /** Number of bouncing logos (1–12). */
+  logoCount: number;
   borderWidth: number;
   borderColor: string;
   timerDurationSeconds: number;
@@ -33,6 +35,7 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   imageScalePercent: 40,
   bounceSpeedPercent: 40,
   chromaticAberration: false,
+  logoCount: 1,
   borderWidth: 2,
   borderColor: "#ffffff",
   timerDurationSeconds: 300,
@@ -170,15 +173,45 @@ export function getRemainingMs(state: DisplayState, config: DisplayConfig): numb
   return Math.max(0, durationMs - elapsed);
 }
 
-export function formatTime(ms: number): string {
+export type TimerDigitSlot = {
+  id: string;
+  char: string;
+  kind: "digit" | "separator";
+};
+
+/** Fixed-width flip-clock slots (padded digits, stable colon positions). */
+export function getTimerDigitSlots(ms: number, reserveHours: boolean): TimerDigitSlot[] {
   const totalSeconds = Math.ceil(ms / 1000);
   const h = Math.floor(totalSeconds / 3600);
   const m = Math.floor((totalSeconds % 3600) / 60);
   const s = totalSeconds % 60;
-  if (h > 0) {
-    return `${h}:${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  const showHours = reserveHours || h > 0;
+  const slots: TimerDigitSlot[] = [];
+
+  const pushDigits = (str: string, prefix: string) => {
+    for (let i = 0; i < str.length; i++) {
+      slots.push({ id: `${prefix}-${i}`, char: str[i]!, kind: "digit" });
+    }
+  };
+  const pushSep = (id: string) => {
+    slots.push({ id, char: ":", kind: "separator" });
+  };
+
+  if (showHours) {
+    pushDigits(String(h).padStart(2, "0"), "h");
+    pushSep("sep-h");
   }
-  return `${m}:${String(s).padStart(2, "0")}`;
+  pushDigits(String(m).padStart(2, "0"), "m");
+  pushSep("sep-m");
+  pushDigits(String(s).padStart(2, "0"), "s");
+
+  return slots;
+}
+
+export function formatTime(ms: number, reserveHours?: boolean): string {
+  return getTimerDigitSlots(ms, reserveHours ?? false)
+    .map((slot) => slot.char)
+    .join("");
 }
 
 export function durationToMinSec(totalSeconds: number): { minutes: number; seconds: number } {
@@ -211,6 +244,15 @@ export function clampBounceSpeed(value: number): number {
   return Math.min(300, Math.max(10, Math.round(Number(value) || DEFAULT_CONFIG.bounceSpeedPercent)));
 }
 
+export const LOGO_COUNT_MAX = 12;
+
+export function clampLogoCount(value: number): number {
+  return Math.min(
+    LOGO_COUNT_MAX,
+    Math.max(1, Math.round(Number(value) || DEFAULT_CONFIG.logoCount))
+  );
+}
+
 export function getBounceVelocity(speedPercent: number): { vx: number; vy: number } {
   const factor = clampBounceSpeed(speedPercent) / 100;
   return {
@@ -238,6 +280,7 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
     chromaticAberration: Boolean(
       partial.chromaticAberration ?? DEFAULT_CONFIG.chromaticAberration
     ),
+    logoCount: clampLogoCount(partial.logoCount ?? DEFAULT_CONFIG.logoCount),
     timerDurationSeconds: Math.max(
       1,
       Number(partial.timerDurationSeconds) || DEFAULT_CONFIG.timerDurationSeconds

@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import {
-  formatTime,
   getRemainingMs,
   loadConfig,
   loadState,
@@ -8,6 +7,7 @@ import {
   stageBorderStyle,
   timerStyle,
 } from "../lib/config";
+import { FlipClockTimer } from "../components/FlipClockTimer";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
 import { useBounceAnimation } from "../hooks/useBounceAnimation";
@@ -16,23 +16,24 @@ import "../styles/display.css";
 export function DisplayPage() {
   const { config } = useDisplayConfig();
   const { state } = useDisplayState();
-  const [timerText, setTimerText] = useState(() =>
-    formatTime(getRemainingMs(loadState(), loadConfig()))
+  const [remainingMs, setRemainingMs] = useState(() =>
+    getRemainingMs(loadState(), loadConfig())
   );
 
   const stageRef = useRef<HTMLDivElement>(null);
-  const logoRef = useRef<HTMLImageElement>(null);
 
-  useBounceAnimation({ stageRef, logoRef, config });
+  useBounceAnimation({ stageRef, config });
 
   useEffect(() => {
-    const tick = () => setTimerText(formatTime(getRemainingMs(state, config)));
+    const tick = () => setRemainingMs(getRemainingMs(state, config));
     tick();
     const id = window.setInterval(tick, 200);
     return () => clearInterval(id);
   }, [state, config]);
 
   const logoSrc = resolveLogoSrc(config);
+  const reserveHours = config.timerDurationSeconds >= 3600;
+  const chromaticClass = config.chromaticAberration ? " bounce-logo--chromatic" : "";
 
   return (
     <div className="view-root" style={{ backgroundColor: config.backgroundColor }}>
@@ -45,17 +46,21 @@ export function DisplayPage() {
           ...stageBorderStyle(config),
         }}
       >
-        <img
-          ref={logoRef}
-          className={`bounce-logo${config.chromaticAberration ? " bounce-logo--chromatic" : ""}`}
-          src={logoSrc}
-          alt=""
-          key={logoSrc}
-        />
+        {Array.from({ length: config.logoCount }, (_, i) => (
+          <img
+            key={`${logoSrc}-${i}`}
+            className={`bounce-logo${chromaticClass}`}
+            src={logoSrc}
+            alt=""
+          />
+        ))}
       </div>
-      <p className="timer-display" style={timerStyle(config)}>
-        {timerText}
-      </p>
+      <FlipClockTimer
+        ms={remainingMs}
+        reserveHours={reserveHours}
+        className="timer-display"
+        style={timerStyle(config)}
+      />
     </div>
   );
 }

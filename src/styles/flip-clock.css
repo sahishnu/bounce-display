@@ -1,0 +1,73 @@
+.flip-clock {
+  margin: 0;
+  font-family:
+    ui-monospace,
+    "SF Mono",
+    "Cascadia Mono",
+    Menlo,
+    Consolas,
+    monospace;
+  font-variant-numeric: tabular-nums;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0;
+}
+
+.flip-clock-face {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flip-digit {
+  display: inline-block;
+  width: 1ch;
+  height: 1em;
+  overflow: hidden;
+  vertical-align: top;
+}
+
+.flip-digit-track {
+  display: flex;
+  flex-direction: column;
+  transform: translate3d(0, 0, 0);
+  transition: transform 240ms cubic-bezier(0.23, 1, 0.32, 1);
+  will-change: transform;
+}
+
+/* New digit above, old below — start showing the old digit in the window. */
+.flip-digit-track--prep {
+  transform: translate3d(0, -50%, 0);
+  transition: none;
+}
+
+/* Slide down: old exits bottom, new enters from top. */
+.flip-digit-track--enter {
+  transform: translate3d(0, 0, 0);
+}
+
+.flip-digit-cell {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 1em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+.flip-sep {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 0.5ch;
+  height: 1em;
+  line-height: 1;
+  flex-shrink: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flip-digit-track {
+    transition: none;
+    will-change: auto;
+  }
+}

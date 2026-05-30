@@ -2,7 +2,6 @@ import { useEffect, useRef, useState } from "react";
 import {
   type DisplayConfig,
   fitBoxInViewport,
-  formatTime,
   getLogoSize,
   getRemainingMs,
   resolveLogoSrc,
@@ -10,6 +9,7 @@ import {
   timerStyle,
 } from "../lib/config";
 import type { DisplayState } from "../lib/config";
+import { FlipClockTimer } from "./FlipClockTimer";
 
 type Props = {
   config: DisplayConfig;
@@ -27,8 +27,9 @@ export function AdminPreview({ config, state }: Props) {
   const naturalRef = useRef<LogoNatural>({ src: "", width: 0, height: 0 });
   const [logoSrc, setLogoSrc] = useState(() => resolveLogoSrc(config));
 
-  const { boxWidth: boxW, boxHeight: boxH, imageScalePercent } = config;
-  const timerText = formatTime(getRemainingMs(state, config));
+  const { boxWidth: boxW, boxHeight: boxH, imageScalePercent, logoCount } = config;
+  const timerRemainingMs = getRemainingMs(state, config);
+  const reserveHours = config.timerDurationSeconds >= 3600;
 
   useEffect(() => {
     naturalRef.current = { src: "", width: 0, height: 0 };
@@ -71,7 +72,7 @@ export function AdminPreview({ config, state }: Props) {
 
     if (img.complete && img.naturalWidth > 0) onLoad();
     else img.onload = onLoad;
-  }, [logoSrc, boxW, boxH, imageScalePercent]);
+  }, [logoSrc, boxW, boxH, imageScalePercent, logoCount]);
 
   function applyLogo(naturalW: number, naturalH: number) {
     const size = getLogoSize(naturalW, naturalH, boxW, boxH, imageScalePercent);
@@ -82,7 +83,7 @@ export function AdminPreview({ config, state }: Props) {
       y: Math.round((boxH - size.height) / 2),
     });
     setMeta(
-      `Bounce ${boxW}×${boxH} · Logo ${Math.round(size.width)}×${Math.round(size.height)}px (${imageScalePercent}% cap)`
+      `Bounce ${boxW}×${boxH} · ${logoCount} logo${logoCount === 1 ? "" : "s"} · ${Math.round(size.width)}×${Math.round(size.height)}px (${imageScalePercent}% cap)`
     );
   }
 
@@ -100,23 +101,34 @@ export function AdminPreview({ config, state }: Props) {
                 ...stageBorderStyle(config),
               }}
             >
-              <img
-                ref={logoRef}
-                className="preview-logo"
-                src={logoSrc}
-                alt=""
-                style={{
-                  width: logoLayout.width,
-                  height: logoLayout.height,
-                  transform: `translate(${logoLayout.x}px, ${logoLayout.y}px)`,
-                }}
-              />
+              {Array.from({ length: logoCount }, (_, i) => {
+                const spread = 14;
+                const ox = (i % 3) * spread - spread;
+                const oy = Math.floor(i / 3) * spread - spread;
+                return (
+                  <img
+                    key={i}
+                    ref={i === 0 ? logoRef : undefined}
+                    className="preview-logo"
+                    src={logoSrc}
+                    alt=""
+                    style={{
+                      width: logoLayout.width,
+                      height: logoLayout.height,
+                      transform: `translate(${logoLayout.x + ox}px, ${logoLayout.y + oy}px)`,
+                    }}
+                  />
+                );
+              })}
             </div>
           </div>
         </div>
-        <p className="preview-timer" style={timerStyle(config, fit)}>
-          {timerText}
-        </p>
+        <FlipClockTimer
+          ms={timerRemainingMs}
+          reserveHours={reserveHours}
+          className="preview-timer"
+          style={timerStyle(config, fit)}
+        />
       </div>
       {meta ? <p className="preview-meta">{meta}</p> : null}
       <p className="field-hint">
