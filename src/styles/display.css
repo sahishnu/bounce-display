@@ -1,0 +1,42 @@
+#root:has(.view-root) {
+  overflow: hidden;
+}
+
+.view-root {
+  position: relative;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.bounce-stage {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.bounce-logo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  object-fit: contain;
+  pointer-events: none;
+  user-select: none;
+}
+
+.timer-display {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-family: system-ui, -apple-system, sans-serif;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  pointer-events: none;
+  user-select: none;
+  z-index: 10;
+}

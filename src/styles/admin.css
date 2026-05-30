@@ -1,0 +1,278 @@
+.admin-body {
+  min-height: 100%;
+  overflow: auto;
+  background: #1a1a1a;
+  color: #e8e8e8;
+  font-family: system-ui, -apple-system, sans-serif;
+  line-height: 1.5;
+}
+
+.admin-layout {
+  max-width: 28rem;
+  margin: 0 auto;
+  padding: 1.5rem 1.25rem 3rem;
+}
+
+.admin-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.admin-header h1 {
+  margin: 0 0 0.2rem;
+  font-size: 1.35rem;
+  font-weight: 600;
+}
+
+.admin-header .subtitle {
+  margin: 0;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.card {
+  background: #111;
+  border: 1px solid #2a2a2a;
+  border-radius: 10px;
+  padding: 1.1rem 1.15rem;
+  margin-bottom: 1rem;
+}
+
+.card h2 {
+  margin: 0 0 0.85rem;
+  font-size: 0.7rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #666;
+}
+
+.playback-card {
+  text-align: center;
+}
+
+.timer-live {
+  margin: 0;
+  font-size: 3rem;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.02em;
+}
+
+.timer-status {
+  margin: 0.4rem 0 1rem;
+  color: #888;
+  font-size: 0.85rem;
+}
+
+.playback-actions {
+  justify-content: center;
+  margin-top: 0;
+}
+
+.btn-lg {
+  padding: 0.7rem 1.5rem;
+  font-size: 1rem;
+}
+
+.preview-frame {
+  position: relative;
+  padding: 1rem;
+  border-radius: 6px;
+  background: #000;
+}
+
+.preview-viewport {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 11rem;
+  overflow: hidden;
+}
+
+.preview-scaler {
+  transform-origin: center center;
+  flex-shrink: 0;
+}
+
+.preview-stage {
+  position: relative;
+  overflow: hidden;
+  box-sizing: border-box;
+  flex-shrink: 0;
+}
+
+.preview-logo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  object-fit: contain;
+}
+
+.preview-timer {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  margin: 0;
+  font-weight: 700;
+  line-height: 1;
+  pointer-events: none;
+}
+
+.logo-size-field {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #2a2a2a;
+}
+
+.logo-size-field input[type="range"] {
+  width: 100%;
+  margin-top: 0.5rem;
+  accent-color: #fff;
+}
+
+.scale-number-full {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #0d0d0d;
+  color: inherit;
+  font: inherit;
+  font-size: 0.875rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.preview-meta {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  color: #777;
+  font-variant-numeric: tabular-nums;
+}
+
+.field-hint {
+  margin: 0.5rem 0 0;
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.preset-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem;
+  margin-top: 0.25rem;
+}
+
+.preset-label {
+  font-size: 0.78rem;
+  color: #666;
+}
+
+.btn-preset {
+  padding: 0.3rem 0.55rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #0d0d0d;
+  color: #aaa;
+  font: inherit;
+  font-size: 0.75rem;
+  cursor: pointer;
+}
+
+.btn-preset:hover {
+  color: #fff;
+  border-color: #555;
+}
+
+.btn-sm {
+  padding: 0.4rem 0.75rem;
+  font-size: 0.8rem;
+}
+
+.save-toast {
+  margin: 0.5rem 0 0;
+  text-align: center;
+  font-size: 0.8rem;
+  color: #6c6;
+}
+
+.field {
+  margin-bottom: 1rem;
+}
+
+.field label {
+  display: block;
+  margin-bottom: 0.35rem;
+  font-size: 0.875rem;
+}
+
+.field input[type="text"],
+.field input[type="number"],
+.field input[type="file"] {
+  width: 100%;
+  padding: 0.5rem 0.65rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #0d0d0d;
+  color: inherit;
+  font: inherit;
+}
+
+.field input[type="color"] {
+  width: 100%;
+  height: 2.5rem;
+  padding: 0.2rem;
+  border: 1px solid #333;
+  border-radius: 6px;
+  background: #0d0d0d;
+  cursor: pointer;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.btn-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+button,
+.admin-layout a.btn-link {
+  padding: 0.55rem 1rem;
+  border: none;
+  border-radius: 6px;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+  text-align: center;
+}
+
+.btn-primary {
+  background: #fff;
+  color: #000;
+}
+
+.btn-secondary {
+  background: #333;
+  color: #fff;
+}
+
+.btn-ghost {
+  background: transparent;
+  color: #aaa;
+  border: 1px solid #333;
+}
