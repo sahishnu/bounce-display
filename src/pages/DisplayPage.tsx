@@ -1,9 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import {
+  getBrowserViewportSize,
   getRemainingMs,
   loadConfig,
   loadState,
+  onDisplayViewportRequest,
   resolveLogoSrc,
+  saveDisplayViewport,
   stageBorderStyle,
   timerStyle,
 } from "../lib/config";
@@ -30,6 +33,19 @@ export function DisplayPage() {
     const id = window.setInterval(tick, 200);
     return () => clearInterval(id);
   }, [state, config]);
+
+  useEffect(() => {
+    const report = () => saveDisplayViewport(getBrowserViewportSize());
+    report();
+    const offRequest = onDisplayViewportRequest(getBrowserViewportSize);
+    window.addEventListener("resize", report);
+    window.visualViewport?.addEventListener("resize", report);
+    return () => {
+      offRequest();
+      window.removeEventListener("resize", report);
+      window.visualViewport?.removeEventListener("resize", report);
+    };
+  }, []);
 
   const logoSrc = resolveLogoSrc(config);
   const reserveHours = config.timerDurationSeconds >= 3600;

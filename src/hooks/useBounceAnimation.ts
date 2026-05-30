@@ -18,19 +18,45 @@ type Options = {
   config: DisplayConfig;
 };
 
-function createBounceBody(index: number, speed: { vx: number; vy: number }): BounceBody {
-  const cols = 3;
-  const col = index % cols;
-  const row = Math.floor(index / cols);
+function randomSpawnPosition(
+  boxW: number,
+  boxH: number,
+  logoW: number,
+  logoH: number
+): { x: number; y: number } {
+  const maxX = Math.max(0, boxW - logoW);
+  const maxY = Math.max(0, boxH - logoH);
+  return {
+    x: maxX > 0 ? Math.random() * maxX : 0,
+    y: maxY > 0 ? Math.random() * maxY : 0,
+  };
+}
+
+function randomVelocity(speed: { vx: number; vy: number }): { vx: number; vy: number } {
   const angle = Math.random() * Math.PI * 2;
   const speedMag = Math.hypot(speed.vx, speed.vy);
   return {
-    x: 20 + col * 44,
-    y: 20 + row * 44,
     vx: Math.cos(angle) * speedMag,
     vy: Math.sin(angle) * speedMag,
-    w: 80,
-    h: 80,
+  };
+}
+
+function createBounceBody(
+  boxW: number,
+  boxH: number,
+  logoW: number,
+  logoH: number,
+  speed: { vx: number; vy: number }
+): BounceBody {
+  const { x, y } = randomSpawnPosition(boxW, boxH, logoW, logoH);
+  const { vx, vy } = randomVelocity(speed);
+  return {
+    x,
+    y,
+    vx,
+    vy,
+    w: logoW,
+    h: logoH,
     scaleX: 1,
     scaleY: 1,
     chromaticPx: 0,
@@ -52,11 +78,37 @@ export function useBounceAnimation({ stageRef, config }: Options): void {
     let lastTime = performance.now();
     const motionQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
 
-    const syncBodies = (count: number) => {
-      const speed = getBounceVelocity(loadConfig().bounceSpeedPercent);
+    const logoSizeFor = (
+      logo: HTMLImageElement | undefined,
+      boxW: number,
+      boxH: number,
+      imageScalePercent: number
+    ) => {
+      if (logo?.naturalWidth && logo.complete) {
+        return getLogoSize(
+          logo.naturalWidth,
+          logo.naturalHeight,
+          boxW,
+          boxH,
+          imageScalePercent
+        );
+      }
+      return { width: 80, height: 80 };
+    };
+
+    const syncBodies = (
+      count: number,
+      boxW: number,
+      boxH: number,
+      logos: HTMLImageElement[],
+      live: DisplayConfig
+    ) => {
+      const speed = getBounceVelocity(live.bounceSpeedPercent);
       const bodies = bodiesRef.current;
       while (bodies.length < count) {
-        bodies.push(createBounceBody(bodies.length, speed));
+        const i = bodies.length;
+        const size = logoSizeFor(logos[i], boxW, boxH, live.imageScalePercent);
+        bodies.push(createBounceBody(boxW, boxH, size.width, size.height, speed));
       }
       bodies.length = count;
     };
@@ -73,7 +125,7 @@ export function useBounceAnimation({ stageRef, config }: Options): void {
       const logos = Array.from(stage.querySelectorAll<HTMLImageElement>(".bounce-logo"));
       const count = Math.min(live.logoCount, logos.length);
 
-      syncBodies(count);
+      syncBodies(count, boxW, boxH, logos, live);
       const bodies = bodiesRef.current;
       const chromaticClass = "bounce-logo--chromatic";
 

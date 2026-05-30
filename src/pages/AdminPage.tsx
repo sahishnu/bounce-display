@@ -12,8 +12,10 @@ import {
   durationToMinSec,
   getRemainingMs,
   minSecToDuration,
-  getBrowserViewportSize,
+  loadDisplayViewport,
   normalizeConfig,
+  onSync,
+  requestDisplayViewport,
   type DisplayConfig,
 } from "../lib/config";
 import "../styles/admin.css";
@@ -31,10 +33,12 @@ export function AdminPage() {
   const { state, persist: persistState } = useDisplayState();
   const [draft, setDraft] = useState<DisplayConfig>(storedConfig);
   const [showToast, setShowToast] = useState(false);
-  const [viewportLabel, setViewportLabel] = useState(() => {
-    const { width, height } = getBrowserViewportSize();
-    return `${width}×${height}`;
-  });
+  const formatViewportLabel = (size: { width: number; height: number } | null) =>
+    size ? `${size.width}×${size.height}` : "display not open";
+
+  const [viewportLabel, setViewportLabel] = useState(() =>
+    formatViewportLabel(loadDisplayViewport())
+  );
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const suppressSyncRef = useRef(false);
@@ -45,16 +49,12 @@ export function AdminPage() {
 
   useEffect(() => {
     const updateViewportLabel = () => {
-      const { width, height } = getBrowserViewportSize();
-      setViewportLabel(`${width}×${height}`);
+      setViewportLabel(formatViewportLabel(loadDisplayViewport()));
     };
     updateViewportLabel();
-    window.addEventListener("resize", updateViewportLabel);
-    window.visualViewport?.addEventListener("resize", updateViewportLabel);
-    return () => {
-      window.removeEventListener("resize", updateViewportLabel);
-      window.visualViewport?.removeEventListener("resize", updateViewportLabel);
-    };
+    return onSync((type) => {
+      if (type === "viewport") updateViewportLabel();
+    });
   }, []);
 
   const apply = useCallback(
@@ -94,9 +94,11 @@ export function AdminPage() {
     [draft, apply]
   );
 
-  const matchBrowserSize = () => {
-    const { width, height } = getBrowserViewportSize();
-    patchImmediate({ boxWidth: width, boxHeight: height });
+  const matchDisplaySize = async () => {
+    const size = (await requestDisplayViewport()) ?? loadDisplayViewport();
+    if (!size) return;
+    setViewportLabel(formatViewportLabel(size));
+    patchImmediate({ boxWidth: size.width, boxHeight: size.height });
   };
 
   const timerRemainingMs = getRemainingMs(state, storedConfig);
@@ -375,12 +377,12 @@ export function AdminPage() {
                 </button>
               ))}
             </div>
-            <button type="button" className="btn-match-window" onClick={matchBrowserSize}>
-              Match this window ({viewportLabel})
+            <button type="button" className="btn-match-window" onClick={() => void matchDisplaySize()}>
+              Match display screen ({viewportLabel})
             </button>
             <p className="field-hint">
-              Open admin on the display screen in fullscreen, then tap this to size the bounce
-              border to the browser.
+              Open the display fullscreen on your projector monitor, then tap this to size the
+              bounce border to that window.
             </p>
           </section>
 

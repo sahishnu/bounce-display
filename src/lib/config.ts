@@ -51,7 +51,16 @@ export const DEFAULT_STATE: DisplayState = {
 
 const STORAGE_KEY = "bounce-display-config";
 const STATE_KEY = "bounce-display-state";
+const VIEWPORT_KEY = "bounce-display-viewport";
 const CHANNEL_NAME = "bounce-display-sync";
+
+export type ViewportSize = { width: number; height: number };
+
+type SyncMessage =
+  | { type: "config" | "state" }
+  | { type: "viewport" }
+  | { type: "viewport-request" }
+  | { type: "viewport-response"; width: number; height: number };
 
 export function resolveLogoSrc(config: DisplayConfig): string {
   return config.imageDataUrl || DEFAULT_LOGO_URL;
@@ -87,7 +96,7 @@ export function saveState(state: DisplayState): void {
   notifyChange("state");
 }
 
-function notifyChange(type: "config" | "state"): void {
+function notifyChange(type: SyncMessage["type"]): void {
   try {
     const channel = new BroadcastChannel(CHANNEL_NAME);
     channel.postMessage({ type });
@@ -98,16 +107,73 @@ function notifyChange(type: "config" | "state"): void {
   window.dispatchEvent(new CustomEvent("bounce-display-update", { detail: { type } }));
 }
 
-export function onSync(callback: (type: "config" | "state") => void): () => void {
+export function loadDisplayViewport(): ViewportSize | null {
+  try {
+    const raw = localStorage.getItem(VIEWPORT_KEY);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<ViewportSize>;
+    const width = Math.round(Number(parsed.width));
+    const height = Math.round(Number(parsed.height));
+    if (!width || !height) return null;
+    return { width, height };
+  } catch {
+    return null;
+  }
+}
+
+export function saveDisplayViewport(size: ViewportSize): void {
+  const normalized = {
+    width: Math.round(size.width),
+    height: Math.round(size.height),
+  };
+  localStorage.setItem(VIEWPORT_KEY, JSON.stringify(normalized));
+  notifyChange("viewport");
+}
+
+export function requestDisplayViewport(timeoutMs = 500): Promise<ViewportSize | null> {
+  return new Promise((resolve) => {
+    let channel: BroadcastChannel | undefined;
+    const finish = (size: ViewportSize | null) => {
+      clearTimeout(timer);
+      channel?.close();
+      resolve(size);
+    };
+    const timer = window.setTimeout(() => finish(loadDisplayViewport()), timeoutMs);
+    try {
+      channel = new BroadcastChannel(CHANNEL_NAME);
+      channel.onmessage = (e: MessageEvent<SyncMessage>) => {
+        if (e.data?.type !== "viewport-response") return;
+        finish({
+          width: Math.round(e.data.width),
+          height: Math.round(e.data.height),
+        });
+      };
+      channel.postMessage({ type: "viewport-request" });
+    } catch {
+      finish(loadDisplayViewport());
+    }
+  });
+}
+
+export function onSync(callback: (type: SyncMessage["type"]) => void): () => void {
   const channel = new BroadcastChannel(CHANNEL_NAME);
-  channel.onmessage = (e) => callback(e.data?.type ?? "config");
+  channel.onmessage = (e: MessageEvent<SyncMessage>) => {
+    const type = e.data?.type;
+    if (type === "config" || type === "state" || type === "viewport") {
+      callback(type);
+    }
+  };
   const onCustom = (e: Event) => {
-    const detail = (e as CustomEvent<{ type: "config" | "state" }>).detail;
-    callback(detail?.type ?? "config");
+    const detail = (e as CustomEvent<{ type: SyncMessage["type"] }>).detail;
+    const type = detail?.type;
+    if (type === "config" || type === "state" || type === "viewport") {
+      callback(type);
+    }
   };
   const onStorage = (e: StorageEvent) => {
     if (e.key === STORAGE_KEY) callback("config");
     if (e.key === STATE_KEY) callback("state");
+    if (e.key === VIEWPORT_KEY) callback("viewport");
   };
   window.addEventListener("bounce-display-update", onCustom);
   window.addEventListener("storage", onStorage);
@@ -116,6 +182,28 @@ export function onSync(callback: (type: "config" | "state") => void): () => void
     window.removeEventListener("bounce-display-update", onCustom);
     window.removeEventListener("storage", onStorage);
   };
+}
+
+/** Subscribe to viewport requests (display tab) and respond with live size. */
+export function onDisplayViewportRequest(
+  getSize: () => ViewportSize
+): () => void {
+  let channel: BroadcastChannel | undefined;
+  try {
+    channel = new BroadcastChannel(CHANNEL_NAME);
+    channel.onmessage = (e: MessageEvent<SyncMessage>) => {
+      if (e.data?.type !== "viewport-request") return;
+      const size = getSize();
+      channel?.postMessage({
+        type: "viewport-response",
+        width: size.width,
+        height: size.height,
+      });
+    };
+  } catch {
+    /* BroadcastChannel unavailable */
+  }
+  return () => channel?.close();
 }
 
 export function timerStyle(config: DisplayConfig, scale = 1): CSSProperties {
