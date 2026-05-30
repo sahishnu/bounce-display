@@ -9,6 +9,7 @@ import {
   formatTime,
   getRemainingMs,
   minSecToDuration,
+  getBrowserViewportSize,
   normalizeConfig,
   type DisplayConfig,
 } from "../lib/config";
@@ -18,6 +19,7 @@ const PRESETS = [
   { w: 640, h: 360, label: "640×360" },
   { w: 960, h: 540, label: "960×540" },
   { w: 1280, h: 720, label: "1280×720" },
+  { w: 1920, h: 1080, label: "1920×1080" },
   { w: 3584, h: 1536, label: "3584×1536" },
 ];
 
@@ -26,6 +28,10 @@ export function AdminPage() {
   const { state, persist: persistState } = useDisplayState();
   const [draft, setDraft] = useState<DisplayConfig>(storedConfig);
   const [showToast, setShowToast] = useState(false);
+  const [viewportLabel, setViewportLabel] = useState(() => {
+    const { width, height } = getBrowserViewportSize();
+    return `${width}×${height}`;
+  });
   const saveTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const toastTimerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const suppressSyncRef = useRef(false);
@@ -33,6 +39,20 @@ export function AdminPage() {
   useEffect(() => {
     if (!suppressSyncRef.current) setDraft(storedConfig);
   }, [storedConfig]);
+
+  useEffect(() => {
+    const updateViewportLabel = () => {
+      const { width, height } = getBrowserViewportSize();
+      setViewportLabel(`${width}×${height}`);
+    };
+    updateViewportLabel();
+    window.addEventListener("resize", updateViewportLabel);
+    window.visualViewport?.addEventListener("resize", updateViewportLabel);
+    return () => {
+      window.removeEventListener("resize", updateViewportLabel);
+      window.visualViewport?.removeEventListener("resize", updateViewportLabel);
+    };
+  }, []);
 
   const apply = useCallback(
     (next: DisplayConfig) => {
@@ -70,6 +90,11 @@ export function AdminPage() {
     },
     [draft, apply]
   );
+
+  const matchBrowserSize = () => {
+    const { width, height } = getBrowserViewportSize();
+    patchImmediate({ boxWidth: width, boxHeight: height });
+  };
 
   const timerLive = formatTime(getRemainingMs(state, storedConfig));
   const paused = state.timerPausedRemainingMs != null;
@@ -261,6 +286,13 @@ export function AdminPage() {
                 </button>
               ))}
             </div>
+            <button type="button" className="btn-match-window" onClick={matchBrowserSize}>
+              Match this window ({viewportLabel})
+            </button>
+            <p className="field-hint">
+              Open admin on the display screen in fullscreen, then tap this to size the bounce
+              border to the browser.
+            </p>
           </section>
 
           <section className="card">

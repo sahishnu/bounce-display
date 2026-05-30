@@ -186,6 +186,14 @@ export function minSecToDuration(minutes: number, seconds: number): number {
   return Math.max(1, m * 60 + sec);
 }
 
+export function getBrowserViewportSize(): { width: number; height: number } {
+  const vv = window.visualViewport;
+  return {
+    width: Math.round(vv?.width ?? window.innerWidth),
+    height: Math.round(vv?.height ?? window.innerHeight),
+  };
+}
+
 export function clampScale(value: number): number {
   return Math.min(100, Math.max(5, Math.round(Number(value) || DEFAULT_CONFIG.imageScalePercent)));
 }
