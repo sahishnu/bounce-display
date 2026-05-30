@@ -17,6 +17,7 @@ export type DisplayConfig = {
   logoCount: number;
   borderWidth: number;
   borderColor: string;
+  borderTransparent: boolean;
   timerDurationSeconds: number;
   imageDataUrl: string | null;
 };
@@ -38,6 +39,7 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   logoCount: 1,
   borderWidth: 2,
   borderColor: "#ffffff",
+  borderTransparent: false,
   timerDurationSeconds: 300,
   imageDataUrl: null,
 };
@@ -128,7 +130,10 @@ export function timerStyle(config: DisplayConfig, scale = 1): CSSProperties {
 export function stageBorderStyle(config: DisplayConfig): CSSProperties {
   const width = Math.max(0, Math.round(config.borderWidth || 0));
   if (width <= 0) return { border: "none" };
-  return { border: `${width}px solid ${config.borderColor || DEFAULT_CONFIG.borderColor}` };
+  const color = config.borderTransparent
+    ? "transparent"
+    : config.borderColor || DEFAULT_CONFIG.borderColor;
+  return { border: `${width}px solid ${color}` };
 }
 
 export function fitBoxInViewport(
@@ -273,6 +278,9 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
     boxHeight: Math.max(100, Number(partial.boxHeight) || DEFAULT_CONFIG.boxHeight),
     borderWidth: Math.min(48, Math.max(0, Math.round(Number(partial.borderWidth) || 0))),
     borderColor: partial.borderColor ?? DEFAULT_CONFIG.borderColor,
+    borderTransparent: Boolean(
+      partial.borderTransparent ?? DEFAULT_CONFIG.borderTransparent
+    ),
     imageScalePercent: clampScale(partial.imageScalePercent ?? DEFAULT_CONFIG.imageScalePercent),
     bounceSpeedPercent: clampBounceSpeed(
       partial.bounceSpeedPercent ?? DEFAULT_CONFIG.bounceSpeedPercent

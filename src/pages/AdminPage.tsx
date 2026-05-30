@@ -424,8 +424,25 @@ export function AdminPage() {
                 id="borderColor"
                 type="color"
                 value={draft.borderColor}
+                disabled={draft.borderTransparent}
                 onChange={(e) => patch({ ...draft, borderColor: e.target.value })}
               />
+            </div>
+            <div className="field field-toggle">
+              <label className="toggle-label" htmlFor="borderTransparent">
+                <input
+                  id="borderTransparent"
+                  type="checkbox"
+                  checked={draft.borderTransparent}
+                  onChange={(e) =>
+                    patchImmediate({ ...draft, borderTransparent: e.target.checked })
+                  }
+                />
+                Transparent border
+              </label>
+              <p className="field-hint">
+                Keeps border thickness but hides the stroke on the display.
+              </p>
             </div>
           </section>
 
