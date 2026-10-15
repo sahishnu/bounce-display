@@ -29,6 +29,8 @@ export type DisplayConfig = {
   borderTransparent: boolean;
   timerDurationSeconds: number;
   imageDataUrl: string | null;
+  /** Second logo, shown bottom-right in the brick breaker skin. Falls back to the default. */
+  imageDataUrl2: string | null;
 };
 
 export type DisplayState = {
@@ -58,6 +60,7 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   borderTransparent: false,
   timerDurationSeconds: 300,
   imageDataUrl: null,
+  imageDataUrl2: null,
 };
 
 export const DEFAULT_STATE: DisplayState = {
@@ -85,6 +88,10 @@ type SyncMessage =
 
 export function resolveLogoSrc(config: DisplayConfig): string {
   return config.imageDataUrl || DEFAULT_LOGO_URL;
+}
+
+export function resolveLogoSrc2(config: DisplayConfig): string {
+  return config.imageDataUrl2 || DEFAULT_LOGO_URL;
 }
 
 export function loadConfig(): DisplayConfig {
@@ -428,5 +435,6 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
       Number(partial.timerDurationSeconds) || DEFAULT_CONFIG.timerDurationSeconds
     ),
     imageDataUrl: partial.imageDataUrl ?? null,
+    imageDataUrl2: partial.imageDataUrl2 ?? null,
   };
 }

@@ -142,11 +142,11 @@ export function AdminPage() {
     });
   };
 
-  const handleUpload = (file: File | undefined) => {
+  const handleUpload = (file: File | undefined, key: "imageDataUrl" | "imageDataUrl2" = "imageDataUrl") => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
-      patchImmediate({ ...draft, imageDataUrl: reader.result as string });
+      patchImmediate({ ...draft, [key]: reader.result as string });
     };
     reader.readAsDataURL(file);
   };
@@ -279,6 +279,47 @@ export function AdminPage() {
                   value={draft.ballSizePercent}
                   onChange={(e) => patch({ ...draft, ballSizePercent: Number(e.target.value) })}
                 />
+              </div>
+              <div className="field">
+                <label htmlFor="logoTopLeft">Top-left logo</label>
+                <input
+                  id="logoTopLeft"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    handleUpload(e.target.files?.[0], "imageDataUrl");
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn-ghost btn-sm"
+                  onClick={() => patchImmediate({ ...draft, imageDataUrl: null })}
+                >
+                  Reset to default logo
+                </button>
+              </div>
+              <div className="field">
+                <label htmlFor="logoBottomRight">Bottom-right logo</label>
+                <input
+                  id="logoBottomRight"
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => {
+                    handleUpload(e.target.files?.[0], "imageDataUrl2");
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  type="button"
+                  className="btn-ghost btn-sm"
+                  onClick={() => patchImmediate({ ...draft, imageDataUrl2: null })}
+                >
+                  Reset to default logo
+                </button>
+                <p className="field-hint">
+                  The logos sit behind the bricks and are revealed as the game clears them.
+                </p>
               </div>
               <button
                 type="button"

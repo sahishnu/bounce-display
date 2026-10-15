@@ -117,10 +117,17 @@
   pointer-events: none;
 }
 
-/* Brick breaker skin: the clock sits behind the game, as on the display. */
+/* Brick breaker skin: the clock and logo sit behind the game, as on the display. */
 .preview-frame--bricks .preview-timer {
   z-index: 0;
-  opacity: 0.35;
+}
+
+.preview-brick-backdrop {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  pointer-events: none;
 }
 
 .preview-frame--bricks .preview-viewport {

@@ -6,11 +6,13 @@ import {
   loadState,
   onDisplayViewportRequest,
   resolveLogoSrc,
+  resolveLogoSrc2,
   saveDisplayViewport,
   stageBorderStyle,
   timerStyle,
 } from "../lib/config";
 import { BrickBreakerStage } from "../components/BrickBreakerStage";
+import { BrickBackdrop } from "../components/BrickBackdrop";
 import { FlipClockTimer } from "../components/FlipClockTimer";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
@@ -85,6 +87,15 @@ export function DisplayPage() {
           ))
         )}
       </div>
+      {bricks ? (
+        <BrickBackdrop
+          srcTopLeft={logoSrc}
+          srcBottomRight={resolveLogoSrc2(config)}
+          width={innerWidth}
+          height={innerHeight}
+          className="brick-backdrop"
+        />
+      ) : null}
       <FlipClockTimer
         ms={remainingMs}
         reserveHours={reserveHours}
