@@ -2,7 +2,16 @@ import type { CSSProperties } from "react";
 
 export const DEFAULT_LOGO_URL = "/SYM_Logo.png";
 
+export type DisplaySkin = "logos" | "brick-breaker";
+
 export type DisplayConfig = {
+  skin: DisplaySkin;
+  /** Brick height as % of the stage height (brick-breaker skin). */
+  brickSizePercent: number;
+  holeWidthPercent: number;
+  holeHeightPercent: number;
+  /** Ball diameter as % of brick height. */
+  ballSizePercent: number;
   backgroundColor: string;
   textColor: string;
   timerFontSize: number;
@@ -25,9 +34,16 @@ export type DisplayConfig = {
 export type DisplayState = {
   timerStartedAt: number | null;
   timerPausedRemainingMs: number | null;
+  /** Seeds the brick-breaker plan; rolled on each fresh start, kept through pause/resume. */
+  gameSeed: number;
 };
 
 export const DEFAULT_CONFIG: DisplayConfig = {
+  skin: "logos",
+  brickSizePercent: 6,
+  holeWidthPercent: 50,
+  holeHeightPercent: 40,
+  ballSizePercent: 40,
   backgroundColor: "#000000",
   textColor: "#ffffff",
   timerFontSize: 96,
@@ -47,7 +63,12 @@ export const DEFAULT_CONFIG: DisplayConfig = {
 export const DEFAULT_STATE: DisplayState = {
   timerStartedAt: null,
   timerPausedRemainingMs: null,
+  gameSeed: 1,
 };
+
+export function rollGameSeed(): number {
+  return (Math.random() * 0xffffffff) >>> 0 || 1;
+}
 
 const STORAGE_KEY = "bounce-display-config";
 const STATE_KEY = "bounce-display-state";
@@ -266,6 +287,16 @@ export function getRemainingMs(state: DisplayState, config: DisplayConfig): numb
   return Math.max(0, durationMs - elapsed);
 }
 
+/** Elapsed ms since the timer began; unlike getRemainingMs it keeps counting past the end. */
+export function getElapsedMs(state: DisplayState, config: DisplayConfig): number {
+  const durationMs = config.timerDurationSeconds * 1000;
+  if (state.timerPausedRemainingMs != null) {
+    return Math.max(0, durationMs - state.timerPausedRemainingMs);
+  }
+  if (state.timerStartedAt == null) return 0;
+  return Math.max(0, Date.now() - state.timerStartedAt);
+}
+
 export type TimerDigitSlot = {
   id: string;
   char: string;
@@ -354,8 +385,23 @@ export function getBounceVelocity(speedPercent: number): { vx: number; vy: numbe
   };
 }
 
+function clampNumber(value: unknown, fallback: number, min: number, max: number): number {
+  const n = Number(value);
+  return Math.min(max, Math.max(min, Number.isFinite(n) && n > 0 ? n : fallback));
+}
+
 export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig {
   return {
+    skin: partial.skin === "brick-breaker" ? "brick-breaker" : "logos",
+    brickSizePercent: clampNumber(partial.brickSizePercent, DEFAULT_CONFIG.brickSizePercent, 2, 30),
+    holeWidthPercent: clampNumber(partial.holeWidthPercent, DEFAULT_CONFIG.holeWidthPercent, 10, 90),
+    holeHeightPercent: clampNumber(
+      partial.holeHeightPercent,
+      DEFAULT_CONFIG.holeHeightPercent,
+      10,
+      90
+    ),
+    ballSizePercent: clampNumber(partial.ballSizePercent, DEFAULT_CONFIG.ballSizePercent, 10, 80),
     backgroundColor: partial.backgroundColor ?? DEFAULT_CONFIG.backgroundColor,
     textColor: partial.textColor ?? DEFAULT_CONFIG.textColor,
     timerFontSize: Math.min(

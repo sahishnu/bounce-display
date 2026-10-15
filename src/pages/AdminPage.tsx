@@ -16,6 +16,7 @@ import {
   normalizeConfig,
   onSync,
   requestDisplayViewport,
+  rollGameSeed,
   type DisplayConfig,
 } from "../lib/config";
 import "../styles/admin.css";
@@ -108,7 +109,11 @@ export function AdminPage() {
 
   const handleStart = () => {
     apply(draft);
-    persistState({ timerStartedAt: Date.now(), timerPausedRemainingMs: null });
+    persistState({
+      timerStartedAt: Date.now(),
+      timerPausedRemainingMs: null,
+      gameSeed: rollGameSeed(),
+    });
   };
 
   const handlePauseResume = () => {
@@ -118,17 +123,23 @@ export function AdminPage() {
       persistState({
         timerStartedAt: Date.now() - (durationMs - remaining),
         timerPausedRemainingMs: null,
+        gameSeed: state.gameSeed,
       });
     } else {
       persistState({
         timerStartedAt: null,
         timerPausedRemainingMs: getRemainingMs(state, storedConfig),
+        gameSeed: state.gameSeed,
       });
     }
   };
 
   const handleReset = () => {
-    persistState({ timerStartedAt: null, timerPausedRemainingMs: null });
+    persistState({
+      timerStartedAt: null,
+      timerPausedRemainingMs: null,
+      gameSeed: state.gameSeed,
+    });
   };
 
   const handleUpload = (file: File | undefined) => {
@@ -190,6 +201,100 @@ export function AdminPage() {
         <AdminPreview config={draft} state={state} />
 
         <div className="controls-card">
+          <section className="card">
+            <h2>Skin</h2>
+            <div className="field">
+              <label htmlFor="skin">Display skin</label>
+              <select
+                id="skin"
+                value={draft.skin}
+                onChange={(e) =>
+                  patchImmediate({ ...draft, skin: e.target.value as DisplayConfig["skin"] })
+                }
+              >
+                <option value="logos">Bouncing logos</option>
+                <option value="brick-breaker">Brick breaker</option>
+              </select>
+              <p className="field-hint">
+                Brick breaker plays an automatic game that clears the last brick exactly when the
+                timer hits zero.
+              </p>
+            </div>
+          </section>
+
+          {draft.skin === "brick-breaker" ? (
+            <section className="card">
+              <h2>Brick breaker</h2>
+              <div className="field">
+                <label htmlFor="brickSize">Brick size (% of stage height)</label>
+                <input
+                  id="brickSize"
+                  type="number"
+                  min={2}
+                  max={30}
+                  step={0.5}
+                  value={draft.brickSizePercent}
+                  onChange={(e) => patch({ ...draft, brickSizePercent: Number(e.target.value) })}
+                />
+                <p className="field-hint">
+                  Smaller bricks mean more of them. Each brick takes at least about 2 seconds, so
+                  short timers use fewer bricks.
+                </p>
+              </div>
+              <div className="field-row">
+                <div className="field">
+                  <label htmlFor="holeWidth">Hole width (%)</label>
+                  <input
+                    id="holeWidth"
+                    type="number"
+                    min={10}
+                    max={90}
+                    value={draft.holeWidthPercent}
+                    onChange={(e) =>
+                      patch({ ...draft, holeWidthPercent: Number(e.target.value) })
+                    }
+                  />
+                </div>
+                <div className="field">
+                  <label htmlFor="holeHeight">Hole height (%)</label>
+                  <input
+                    id="holeHeight"
+                    type="number"
+                    min={10}
+                    max={90}
+                    value={draft.holeHeightPercent}
+                    onChange={(e) =>
+                      patch({ ...draft, holeHeightPercent: Number(e.target.value) })
+                    }
+                  />
+                </div>
+              </div>
+              <div className="field">
+                <label htmlFor="ballSize">Ball size (% of brick height)</label>
+                <input
+                  id="ballSize"
+                  type="number"
+                  min={10}
+                  max={80}
+                  value={draft.ballSizePercent}
+                  onChange={(e) => patch({ ...draft, ballSizePercent: Number(e.target.value) })}
+                />
+              </div>
+              <button
+                type="button"
+                className="btn-ghost btn-sm"
+                onClick={() => persistState({ ...state, gameSeed: rollGameSeed() })}
+              >
+                Re-roll game
+              </button>
+              <p className="field-hint">
+                Picks a new random game. Starting the timer also rolls a new one; pause and resume
+                keep the current game.
+              </p>
+            </section>
+          ) : null}
+
+          {draft.skin === "logos" ? (
           <section className="card">
             <h2>Logo</h2>
             <div className="field">
@@ -326,6 +431,7 @@ export function AdminPage() {
               </p>
             </div>
           </section>
+          ) : null}
 
           <section className="card">
             <h2>Bounce area</h2>

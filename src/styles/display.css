@@ -41,3 +41,20 @@
   user-select: none;
   z-index: 10;
 }
+
+.bounce-stage--bricks {
+  z-index: 1;
+}
+
+.brick-canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  display: block;
+  pointer-events: none;
+}
+
+.timer-display--behind {
+  z-index: 0;
+  opacity: 0.35;
+}

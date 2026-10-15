@@ -10,6 +10,7 @@ import {
   stageBorderStyle,
   timerStyle,
 } from "../lib/config";
+import { BrickBreakerStage } from "../components/BrickBreakerStage";
 import { FlipClockTimer } from "../components/FlipClockTimer";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
@@ -25,7 +26,8 @@ export function DisplayPage() {
 
   const stageRef = useRef<HTMLDivElement>(null);
 
-  useBounceAnimation({ stageRef, config });
+  const bricks = config.skin === "brick-breaker";
+  useBounceAnimation({ stageRef, config, enabled: !bricks });
 
   useEffect(() => {
     const tick = () => setRemainingMs(getRemainingMs(state, config));
@@ -50,31 +52,43 @@ export function DisplayPage() {
   const logoSrc = resolveLogoSrc(config);
   const reserveHours = config.timerDurationSeconds >= 3600;
   const chromaticClass = config.chromaticAberration ? " bounce-logo--chromatic" : "";
+  const borderPx = Math.max(0, Math.round(config.borderWidth || 0));
+  const innerWidth = Math.max(1, config.boxWidth - borderPx * 2);
+  const innerHeight = Math.max(1, config.boxHeight - borderPx * 2);
 
   return (
     <div className="view-root" style={{ backgroundColor: config.backgroundColor }}>
       <div
         ref={stageRef}
-        className="bounce-stage"
+        className={`bounce-stage${bricks ? " bounce-stage--bricks" : ""}`}
         style={{
           width: config.boxWidth,
           height: config.boxHeight,
           ...stageBorderStyle(config),
         }}
       >
-        {Array.from({ length: config.logoCount }, (_, i) => (
-          <img
-            key={`${logoSrc}-${i}`}
-            className={`bounce-logo${chromaticClass}`}
-            src={logoSrc}
-            alt=""
+        {bricks ? (
+          <BrickBreakerStage
+            config={config}
+            state={state}
+            width={innerWidth}
+            height={innerHeight}
           />
-        ))}
+        ) : (
+          Array.from({ length: config.logoCount }, (_, i) => (
+            <img
+              key={`${logoSrc}-${i}`}
+              className={`bounce-logo${chromaticClass}`}
+              src={logoSrc}
+              alt=""
+            />
+          ))
+        )}
       </div>
       <FlipClockTimer
         ms={remainingMs}
         reserveHours={reserveHours}
-        className="timer-display"
+        className={bricks ? "timer-display timer-display--behind" : "timer-display"}
         style={timerStyle(config)}
       />
     </div>
