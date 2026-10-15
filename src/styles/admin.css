@@ -117,6 +117,24 @@
   pointer-events: none;
 }
 
+/* Brick breaker skin: the clock and logo sit behind the game, as on the display. */
+.preview-frame--bricks .preview-timer {
+  z-index: 0;
+}
+
+.preview-brick-backdrop {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.preview-frame--bricks .preview-viewport {
+  position: relative;
+  z-index: 1;
+}
+
 .logo-size-field {
   margin-top: 1.25rem;
   padding-top: 1.25rem;

@@ -16,6 +16,8 @@ import {
 type Options = {
   stageRef: RefObject<HTMLDivElement | null>;
   config: DisplayConfig;
+  /** Set false for skins that don't use bouncing logos. */
+  enabled?: boolean;
 };
 
 function randomSpawnPosition(
@@ -64,13 +66,13 @@ function createBounceBody(
   };
 }
 
-export function useBounceAnimation({ stageRef, config }: Options): void {
+export function useBounceAnimation({ stageRef, config, enabled = true }: Options): void {
   const animRef = useRef(0);
   const bodiesRef = useRef<BounceBody[]>([]);
 
   useEffect(() => {
     const stage = stageRef.current;
-    if (!stage) return;
+    if (!stage || !enabled) return;
 
     cancelAnimationFrame(animRef.current);
     bodiesRef.current = [];
@@ -187,6 +189,7 @@ export function useBounceAnimation({ stageRef, config }: Options): void {
     return () => cancelAnimationFrame(animRef.current);
   }, [
     stageRef,
+    enabled,
     config.boxWidth,
     config.boxHeight,
     config.imageScalePercent,
