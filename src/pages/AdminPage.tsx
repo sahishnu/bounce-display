@@ -142,7 +142,7 @@ export function AdminPage() {
     });
   };
 
-  const handleUpload = (file: File | undefined, key: "imageDataUrl" | "imageDataUrl2" = "imageDataUrl") => {
+  const handleUpload = (file: File | undefined, key: "imageDataUrl" = "imageDataUrl") => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
@@ -270,18 +270,18 @@ export function AdminPage() {
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="ballSize">Ball size (% of brick height)</label>
+                <label htmlFor="ballSize">Logo size (% of brick height)</label>
                 <input
                   id="ballSize"
                   type="number"
                   min={10}
-                  max={80}
+                  max={200}
                   value={draft.ballSizePercent}
                   onChange={(e) => patch({ ...draft, ballSizePercent: Number(e.target.value) })}
                 />
               </div>
               <div className="field">
-                <label htmlFor="logoTopLeft">Top-left logo</label>
+                <label htmlFor="logoTopLeft">Logo</label>
                 <input
                   id="logoTopLeft"
                   type="file"
@@ -298,28 +298,6 @@ export function AdminPage() {
                 >
                   Reset to default logo
                 </button>
-              </div>
-              <div className="field">
-                <label htmlFor="logoBottomRight">Bottom-right logo</label>
-                <input
-                  id="logoBottomRight"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    handleUpload(e.target.files?.[0], "imageDataUrl2");
-                    e.target.value = "";
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn-ghost btn-sm"
-                  onClick={() => patchImmediate({ ...draft, imageDataUrl2: null })}
-                >
-                  Reset to default logo
-                </button>
-                <p className="field-hint">
-                  The logos sit behind the bricks and are revealed as the game clears them.
-                </p>
               </div>
               <button
                 type="button"

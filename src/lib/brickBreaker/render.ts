@@ -38,15 +38,14 @@ function firstEventAfter(plan: BrickBreakerPlan, t: number): number {
   return lo;
 }
 
-export function drawFrame(
+/** Clears the canvas, then draws standing bricks and break effects. */
+export function drawBricks(
   ctx: CanvasRenderingContext2D,
   plan: BrickBreakerPlan,
-  elapsedMs: number,
-  { nowMs, idle }: FrameOptions
+  elapsedMs: number
 ): void {
   const { width, height } = plan.params;
-  const { brickW, brickH, rows, ballRadius: r, events } = plan;
-  const durationMs = plan.params.durationMs;
+  const { brickW, brickH, rows, events } = plan;
   ctx.clearRect(0, 0, width, height);
 
   // Standing bricks.
@@ -104,6 +103,17 @@ export function drawFrame(
     }
     ctx.globalAlpha = 1;
   }
+}
+
+export function drawFrame(
+  ctx: CanvasRenderingContext2D,
+  plan: BrickBreakerPlan,
+  elapsedMs: number,
+  { nowMs, idle }: FrameOptions
+): void {
+  const { ballRadius: r } = plan;
+  const durationMs = plan.params.durationMs;
+  drawBricks(ctx, plan, elapsedMs);
 
   // Ball.
   let alpha = 1;

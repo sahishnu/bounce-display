@@ -29,8 +29,6 @@ export type DisplayConfig = {
   borderTransparent: boolean;
   timerDurationSeconds: number;
   imageDataUrl: string | null;
-  /** Second logo, shown bottom-right in the brick breaker skin. Falls back to the default. */
-  imageDataUrl2: string | null;
 };
 
 export type DisplayState = {
@@ -45,7 +43,7 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   brickSizePercent: 6,
   holeWidthPercent: 50,
   holeHeightPercent: 40,
-  ballSizePercent: 40,
+  ballSizePercent: 100,
   backgroundColor: "#000000",
   textColor: "#ffffff",
   timerFontSize: 96,
@@ -60,7 +58,6 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   borderTransparent: false,
   timerDurationSeconds: 300,
   imageDataUrl: null,
-  imageDataUrl2: null,
 };
 
 export const DEFAULT_STATE: DisplayState = {
@@ -88,10 +85,6 @@ type SyncMessage =
 
 export function resolveLogoSrc(config: DisplayConfig): string {
   return config.imageDataUrl || DEFAULT_LOGO_URL;
-}
-
-export function resolveLogoSrc2(config: DisplayConfig): string {
-  return config.imageDataUrl2 || DEFAULT_LOGO_URL;
 }
 
 export function loadConfig(): DisplayConfig {
@@ -408,7 +401,7 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
       10,
       90
     ),
-    ballSizePercent: clampNumber(partial.ballSizePercent, DEFAULT_CONFIG.ballSizePercent, 10, 80),
+    ballSizePercent: clampNumber(partial.ballSizePercent, DEFAULT_CONFIG.ballSizePercent, 10, 200),
     backgroundColor: partial.backgroundColor ?? DEFAULT_CONFIG.backgroundColor,
     textColor: partial.textColor ?? DEFAULT_CONFIG.textColor,
     timerFontSize: Math.min(
@@ -435,6 +428,5 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
       Number(partial.timerDurationSeconds) || DEFAULT_CONFIG.timerDurationSeconds
     ),
     imageDataUrl: partial.imageDataUrl ?? null,
-    imageDataUrl2: partial.imageDataUrl2 ?? null,
   };
 }
