@@ -358,3 +358,21 @@ export function bodyPosition(path: BodyPath, elapsedMs: number): Point {
   const b = points[lo + 1]!;
   return { x: a.x + (b.x - a.x) * f, y: a.y + (b.y - a.y) * f };
 }
+
+const SEED_RETRIES = 16;
+
+/**
+ * Some seed and layout combinations leave the planner with no legal shot. Retrying with
+ * derived seeds is deterministic, so the display and the admin preview land on the same
+ * game. Returns null if every attempt fails, so callers can degrade instead of crashing.
+ */
+export function generateProtoPlanSafe(params: ProtoParams): ProtoPlan | null {
+  for (let attempt = 0; attempt < SEED_RETRIES; attempt++) {
+    try {
+      return generateProtoPlan({ ...params, seed: (params.seed + attempt * 0x9e3779b1) >>> 0 });
+    } catch {
+      // try the next derived seed
+    }
+  }
+  return null;
+}
