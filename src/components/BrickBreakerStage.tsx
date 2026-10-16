@@ -7,7 +7,7 @@ import {
 } from "../lib/config";
 import type { BrickBreakerPlan } from "../lib/brickBreaker/plan";
 import { useLogo, type Sprite } from "../lib/brickBreaker/logoSprite";
-import { bodyPosition, generateProtoPlan, type ProtoPlan } from "../lib/brickBreaker/protoPlan";
+import { bodyPosition, generateProtoPlanSafe, type ProtoPlan } from "../lib/brickBreaker/protoPlan";
 import { drawBricks } from "../lib/brickBreaker/render";
 
 const LOGO_FADE_MS = 500;
@@ -72,7 +72,7 @@ export function BrickBreakerStage({ config, state, width, height, scrubMs, onPla
 
   const plan = useMemo(
     () =>
-      generateProtoPlan({
+      generateProtoPlanSafe({
         seed: state.gameSeed,
         durationMs: config.timerDurationSeconds * 1000,
         width,
@@ -99,7 +99,7 @@ export function BrickBreakerStage({ config, state, width, height, scrubMs, onPla
   );
 
   useEffect(() => {
-    onPlan?.(plan.base);
+    if (plan) onPlan?.(plan.base);
   }, [plan, onPlan]);
 
   const live = useRef({ plan, config, state, scrubMs, sprite });
@@ -124,6 +124,11 @@ export function BrickBreakerStage({ config, state, width, height, scrubMs, onPla
         cur.state.timerStartedAt == null &&
         cur.state.timerPausedRemainingMs == null;
       const elapsed = cur.scrubMs ?? getElapsedMs(cur.state, cur.config);
+      if (!cur.plan) {
+        ctx.clearRect(0, 0, width, height);
+        raf = requestAnimationFrame(loop);
+        return;
+      }
       drawBricks(ctx, cur.plan.base, elapsed, cur.config.brickPalette);
       drawLogo(ctx, cur.plan, cur.sprite, elapsed, now, idle);
       raf = requestAnimationFrame(loop);
