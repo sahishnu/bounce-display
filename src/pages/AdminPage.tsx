@@ -34,7 +34,7 @@ type TabId = "timer" | "appearance" | "screen";
 
 const TABS: { id: TabId; label: string; sub: string }[] = [
   { id: "timer", label: "Timer", sub: "Length & text" },
-  { id: "appearance", label: "Appearance", sub: "Skin & logo" },
+  { id: "appearance", label: "Appearance", sub: "Skin options & logo" },
   { id: "screen", label: "Screen", sub: "Size & colors" },
 ];
 
@@ -235,6 +235,23 @@ export function AdminPage() {
           </div>
 
           <div className="admin-settings">
+            <div className="skin-bar" role="radiogroup" aria-label="Display skin">
+              <span className="skin-bar-label">Skin</span>
+              {SKINS.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  role="radio"
+                  aria-checked={draft.skin === s.id}
+                  className="skin-option"
+                  title={s.hint}
+                  onClick={() => patchImmediate({ ...draft, skin: s.id })}
+                >
+                  {s.label}
+                </button>
+              ))}
+            </div>
+
             <div className="tabs" role="tablist" aria-label="Settings" onKeyDown={onTabKeyDown}>
               {TABS.map((t) => (
                 <button
@@ -341,25 +358,6 @@ export function AdminPage() {
 
               {tab === "appearance" ? (
                 <>
-                  <section className="card">
-                    <h2>Skin</h2>
-                    <div className="skin-picker" role="radiogroup" aria-label="Display skin">
-                      {SKINS.map((s) => (
-                        <button
-                          key={s.id}
-                          type="button"
-                          role="radio"
-                          aria-checked={draft.skin === s.id}
-                          className="skin-option"
-                          onClick={() => patchImmediate({ ...draft, skin: s.id })}
-                        >
-                          <strong>{s.label}</strong>
-                          <span>{s.hint}</span>
-                        </button>
-                      ))}
-                    </div>
-                  </section>
-
                   {draft.skin === "brick-breaker" ? (
                     <section className="card">
                       <h2>Brick breaker</h2>
