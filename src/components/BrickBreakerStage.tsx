@@ -124,7 +124,7 @@ export function BrickBreakerStage({ config, state, width, height, scrubMs, onPla
         cur.state.timerStartedAt == null &&
         cur.state.timerPausedRemainingMs == null;
       const elapsed = cur.scrubMs ?? getElapsedMs(cur.state, cur.config);
-      drawBricks(ctx, cur.plan.base, elapsed);
+      drawBricks(ctx, cur.plan.base, elapsed, cur.config.brickPalette);
       drawLogo(ctx, cur.plan, cur.sprite, elapsed, now, idle);
       raf = requestAnimationFrame(loop);
     };

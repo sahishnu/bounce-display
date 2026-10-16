@@ -2,12 +2,15 @@ import type { CSSProperties } from "react";
 
 export const DEFAULT_LOGO_URL = "/SYM_Logo.png";
 
+import { DEFAULT_BRICK_PALETTE, isBrickPaletteId, type BrickPaletteId } from "./brickBreaker/palettes";
+
 export type DisplaySkin = "logos" | "brick-breaker";
 
 export type DisplayConfig = {
   skin: DisplaySkin;
   /** Brick height as % of the stage height (brick-breaker skin). */
   brickSizePercent: number;
+  brickPalette: BrickPaletteId;
   holeWidthPercent: number;
   holeHeightPercent: number;
   /** Ball diameter as % of brick height. */
@@ -41,6 +44,7 @@ export type DisplayState = {
 export const DEFAULT_CONFIG: DisplayConfig = {
   skin: "logos",
   brickSizePercent: 6,
+  brickPalette: DEFAULT_BRICK_PALETTE,
   holeWidthPercent: 50,
   holeHeightPercent: 40,
   ballSizePercent: 100,
@@ -393,6 +397,7 @@ function clampNumber(value: unknown, fallback: number, min: number, max: number)
 export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig {
   return {
     skin: partial.skin === "brick-breaker" ? "brick-breaker" : "logos",
+    brickPalette: isBrickPaletteId(partial.brickPalette) ? partial.brickPalette : DEFAULT_BRICK_PALETTE,
     brickSizePercent: clampNumber(partial.brickSizePercent, DEFAULT_CONFIG.brickSizePercent, 2, 30),
     holeWidthPercent: clampNumber(partial.holeWidthPercent, DEFAULT_CONFIG.holeWidthPercent, 10, 90),
     holeHeightPercent: clampNumber(

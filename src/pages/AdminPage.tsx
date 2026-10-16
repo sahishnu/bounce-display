@@ -4,6 +4,7 @@ import { AdminPreview } from "../components/AdminPreview";
 import { FlipClockTimer } from "../components/FlipClockTimer";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
+import { BRICK_PALETTES, type BrickPaletteId } from "../lib/brickBreaker/palettes";
 import {
   clampBounceSpeed,
   clampLogoCount,
@@ -225,6 +226,22 @@ export function AdminPage() {
           {draft.skin === "brick-breaker" ? (
             <section className="card">
               <h2>Brick breaker</h2>
+              <div className="field">
+                <label htmlFor="brickPalette">Brick colors</label>
+                <select
+                  id="brickPalette"
+                  value={draft.brickPalette}
+                  onChange={(e) =>
+                    patchImmediate({ ...draft, brickPalette: e.target.value as BrickPaletteId })
+                  }
+                >
+                  {(Object.keys(BRICK_PALETTES) as BrickPaletteId[]).map((id) => (
+                    <option key={id} value={id}>
+                      {BRICK_PALETTES[id].label}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="field">
                 <label htmlFor="brickSize">Brick size (% of stage height)</label>
                 <input
