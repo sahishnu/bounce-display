@@ -2,12 +2,15 @@ import type { CSSProperties } from "react";
 
 export const DEFAULT_LOGO_URL = "/SYM_Logo.png";
 
+import { DEFAULT_BRICK_PALETTE, isBrickPaletteId, type BrickPaletteId } from "./brickBreaker/palettes";
+
 export type DisplaySkin = "logos" | "brick-breaker";
 
 export type DisplayConfig = {
   skin: DisplaySkin;
   /** Brick height as % of the stage height (brick-breaker skin). */
   brickSizePercent: number;
+  brickPalette: BrickPaletteId;
   holeWidthPercent: number;
   holeHeightPercent: number;
   /** Ball diameter as % of brick height. */
@@ -29,8 +32,6 @@ export type DisplayConfig = {
   borderTransparent: boolean;
   timerDurationSeconds: number;
   imageDataUrl: string | null;
-  /** Second logo, shown bottom-right in the brick breaker skin. Falls back to the default. */
-  imageDataUrl2: string | null;
 };
 
 export type DisplayState = {
@@ -43,9 +44,10 @@ export type DisplayState = {
 export const DEFAULT_CONFIG: DisplayConfig = {
   skin: "logos",
   brickSizePercent: 6,
+  brickPalette: DEFAULT_BRICK_PALETTE,
   holeWidthPercent: 50,
   holeHeightPercent: 40,
-  ballSizePercent: 40,
+  ballSizePercent: 100,
   backgroundColor: "#000000",
   textColor: "#ffffff",
   timerFontSize: 96,
@@ -60,7 +62,6 @@ export const DEFAULT_CONFIG: DisplayConfig = {
   borderTransparent: false,
   timerDurationSeconds: 300,
   imageDataUrl: null,
-  imageDataUrl2: null,
 };
 
 export const DEFAULT_STATE: DisplayState = {
@@ -88,10 +89,6 @@ type SyncMessage =
 
 export function resolveLogoSrc(config: DisplayConfig): string {
   return config.imageDataUrl || DEFAULT_LOGO_URL;
-}
-
-export function resolveLogoSrc2(config: DisplayConfig): string {
-  return config.imageDataUrl2 || DEFAULT_LOGO_URL;
 }
 
 export function loadConfig(): DisplayConfig {
@@ -400,6 +397,7 @@ function clampNumber(value: unknown, fallback: number, min: number, max: number)
 export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig {
   return {
     skin: partial.skin === "brick-breaker" ? "brick-breaker" : "logos",
+    brickPalette: isBrickPaletteId(partial.brickPalette) ? partial.brickPalette : DEFAULT_BRICK_PALETTE,
     brickSizePercent: clampNumber(partial.brickSizePercent, DEFAULT_CONFIG.brickSizePercent, 2, 30),
     holeWidthPercent: clampNumber(partial.holeWidthPercent, DEFAULT_CONFIG.holeWidthPercent, 10, 90),
     holeHeightPercent: clampNumber(
@@ -408,7 +406,7 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
       10,
       90
     ),
-    ballSizePercent: clampNumber(partial.ballSizePercent, DEFAULT_CONFIG.ballSizePercent, 10, 80),
+    ballSizePercent: clampNumber(partial.ballSizePercent, DEFAULT_CONFIG.ballSizePercent, 10, 200),
     backgroundColor: partial.backgroundColor ?? DEFAULT_CONFIG.backgroundColor,
     textColor: partial.textColor ?? DEFAULT_CONFIG.textColor,
     timerFontSize: Math.min(
@@ -435,6 +433,5 @@ export function normalizeConfig(partial: Partial<DisplayConfig>): DisplayConfig 
       Number(partial.timerDurationSeconds) || DEFAULT_CONFIG.timerDurationSeconds
     ),
     imageDataUrl: partial.imageDataUrl ?? null,
-    imageDataUrl2: partial.imageDataUrl2 ?? null,
   };
 }

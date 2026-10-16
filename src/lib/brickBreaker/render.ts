@@ -1,4 +1,5 @@
 import { getBallPosition, type BrickBreakerPlan } from "./plan";
+import { brickColor, DEFAULT_BRICK_PALETTE, type BrickPaletteId } from "./palettes";
 
 const BREAK_FX_MS = 650;
 const FINAL_FX_MS = 1500;
@@ -21,11 +22,6 @@ function hash(a: number, b: number): number {
   return ((h ^ (h >>> 16)) >>> 0) / 4294967296;
 }
 
-function brickColor(row: number, rows: number, light = 55): string {
-  const hue = (row / Math.max(1, rows - 1)) * 300;
-  return `hsl(${hue.toFixed(0)} 78% ${light}%)`;
-}
-
 function firstEventAfter(plan: BrickBreakerPlan, t: number): number {
   const { events } = plan;
   let lo = 0;
@@ -38,15 +34,15 @@ function firstEventAfter(plan: BrickBreakerPlan, t: number): number {
   return lo;
 }
 
-export function drawFrame(
+/** Clears the canvas, then draws standing bricks and break effects. */
+export function drawBricks(
   ctx: CanvasRenderingContext2D,
   plan: BrickBreakerPlan,
   elapsedMs: number,
-  { nowMs, idle }: FrameOptions
+  palette: BrickPaletteId = DEFAULT_BRICK_PALETTE
 ): void {
   const { width, height } = plan.params;
-  const { brickW, brickH, rows, ballRadius: r, events } = plan;
-  const durationMs = plan.params.durationMs;
+  const { brickW, brickH, rows, events } = plan;
   ctx.clearRect(0, 0, width, height);
 
   // Standing bricks.
@@ -58,7 +54,7 @@ export function drawFrame(
     const w = b.w - inset * 2;
     const h = b.h - inset * 2;
     if (w <= 0 || h <= 0) continue;
-    ctx.fillStyle = brickColor(b.row, rows);
+    ctx.fillStyle = brickColor(palette, b.row, rows);
     ctx.beginPath();
     ctx.roundRect(x, y, w, h, Math.min(w, h) * 0.12);
     ctx.fill();
@@ -99,11 +95,22 @@ export function drawFrame(
       const y = cy + Math.sin(angle) * speed * seconds * 1.6 + brickH * 2.2 * seconds * seconds;
       const size = brickH * (isFinal ? 0.2 : 0.13) * (0.6 + hash(b.id, k + 202) * 0.8);
       ctx.globalAlpha = Math.max(0, fade);
-      ctx.fillStyle = brickColor(b.row, rows, 62);
+      ctx.fillStyle = brickColor(palette, b.row, rows, 7);
       ctx.fillRect(x - size / 2, y - size / 2, size, size);
     }
     ctx.globalAlpha = 1;
   }
+}
+
+export function drawFrame(
+  ctx: CanvasRenderingContext2D,
+  plan: BrickBreakerPlan,
+  elapsedMs: number,
+  { nowMs, idle }: FrameOptions
+): void {
+  const { ballRadius: r } = plan;
+  const durationMs = plan.params.durationMs;
+  drawBricks(ctx, plan, elapsedMs);
 
   // Ball.
   let alpha = 1;

@@ -5,12 +5,10 @@ import {
   getLogoSize,
   getRemainingMs,
   resolveLogoSrc,
-  resolveLogoSrc2,
   stageBorderStyle,
   timerStyle,
 } from "../lib/config";
 import type { DisplayState } from "../lib/config";
-import { BrickBackdrop } from "./BrickBackdrop";
 import { BrickBreakerStage } from "./BrickBreakerStage";
 import { FlipClockTimer } from "./FlipClockTimer";
 import { summarizePlan, type BrickBreakerPlan } from "../lib/brickBreaker/plan";
@@ -145,16 +143,6 @@ export function AdminPreview({ config, state }: Props) {
             </div>
           </div>
         </div>
-        {bricks ? (
-          <BrickBackdrop
-            srcTopLeft={logoSrc}
-            srcBottomRight={resolveLogoSrc2(config)}
-            width={innerW}
-            height={innerH}
-            className="preview-brick-backdrop"
-            style={{ transform: `translate(-50%, -50%) scale(${fit})` }}
-          />
-        ) : null}
         <FlipClockTimer
           ms={timerRemainingMs}
           reserveHours={reserveHours}

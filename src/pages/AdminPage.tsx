@@ -4,6 +4,7 @@ import { AdminPreview } from "../components/AdminPreview";
 import { FlipClockTimer } from "../components/FlipClockTimer";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
+import { BRICK_PALETTES, type BrickPaletteId } from "../lib/brickBreaker/palettes";
 import {
   clampBounceSpeed,
   clampLogoCount,
@@ -142,7 +143,7 @@ export function AdminPage() {
     });
   };
 
-  const handleUpload = (file: File | undefined, key: "imageDataUrl" | "imageDataUrl2" = "imageDataUrl") => {
+  const handleUpload = (file: File | undefined, key: "imageDataUrl" = "imageDataUrl") => {
     if (!file) return;
     const reader = new FileReader();
     reader.onload = () => {
@@ -226,6 +227,22 @@ export function AdminPage() {
             <section className="card">
               <h2>Brick breaker</h2>
               <div className="field">
+                <label htmlFor="brickPalette">Brick colors</label>
+                <select
+                  id="brickPalette"
+                  value={draft.brickPalette}
+                  onChange={(e) =>
+                    patchImmediate({ ...draft, brickPalette: e.target.value as BrickPaletteId })
+                  }
+                >
+                  {(Object.keys(BRICK_PALETTES) as BrickPaletteId[]).map((id) => (
+                    <option key={id} value={id}>
+                      {BRICK_PALETTES[id].label}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="field">
                 <label htmlFor="brickSize">Brick size (% of stage height)</label>
                 <input
                   id="brickSize"
@@ -270,18 +287,18 @@ export function AdminPage() {
                 </div>
               </div>
               <div className="field">
-                <label htmlFor="ballSize">Ball size (% of brick height)</label>
+                <label htmlFor="ballSize">Logo size (% of brick height)</label>
                 <input
                   id="ballSize"
                   type="number"
                   min={10}
-                  max={80}
+                  max={200}
                   value={draft.ballSizePercent}
                   onChange={(e) => patch({ ...draft, ballSizePercent: Number(e.target.value) })}
                 />
               </div>
               <div className="field">
-                <label htmlFor="logoTopLeft">Top-left logo</label>
+                <label htmlFor="logoTopLeft">Logo</label>
                 <input
                   id="logoTopLeft"
                   type="file"
@@ -298,28 +315,6 @@ export function AdminPage() {
                 >
                   Reset to default logo
                 </button>
-              </div>
-              <div className="field">
-                <label htmlFor="logoBottomRight">Bottom-right logo</label>
-                <input
-                  id="logoBottomRight"
-                  type="file"
-                  accept="image/*"
-                  onChange={(e) => {
-                    handleUpload(e.target.files?.[0], "imageDataUrl2");
-                    e.target.value = "";
-                  }}
-                />
-                <button
-                  type="button"
-                  className="btn-ghost btn-sm"
-                  onClick={() => patchImmediate({ ...draft, imageDataUrl2: null })}
-                >
-                  Reset to default logo
-                </button>
-                <p className="field-hint">
-                  The logos sit behind the bricks and are revealed as the game clears them.
-                </p>
               </div>
               <button
                 type="button"
