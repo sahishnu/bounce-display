@@ -539,3 +539,9 @@ button:disabled {
   opacity: 0.4;
   cursor: not-allowed;
 }
+
+.palette-swatch {
+  height: 0.75rem;
+  margin-top: 0.5rem;
+  border-radius: 4px;
+}

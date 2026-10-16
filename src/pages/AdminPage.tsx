@@ -4,7 +4,7 @@ import { AdminPreview } from "../components/AdminPreview";
 import { FlipClockTimer } from "../components/FlipClockTimer";
 import { useDisplayConfig } from "../hooks/useDisplayConfig";
 import { useDisplayState } from "../hooks/useDisplayState";
-import { BRICK_PALETTES, type BrickPaletteId } from "../lib/brickBreaker/palettes";
+import { BRICK_PALETTES, paletteGradient, type BrickPaletteId } from "../lib/brickBreaker/palettes";
 import {
   clampBounceSpeed,
   clampLogoCount,
@@ -379,6 +379,11 @@ export function AdminPage() {
                             </option>
                           ))}
                         </select>
+                        <div
+                          className="palette-swatch"
+                          style={{ background: paletteGradient(draft.brickPalette) }}
+                          aria-hidden="true"
+                        />
                       </div>
                       <div className="field">
                         <label htmlFor="brickSize">Brick size (% of stage height)</label>
